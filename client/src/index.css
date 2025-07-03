@@ -2,9 +2,10 @@
 @import "tailwindcss";
 
 
-:root {
-  --color-primary: #F84565;
-  --color-primary-dull: #D63854;
+@theme{
+  --color-primary: #F84565
+  --color-primary-dull: #D63854
+
 }
 
 *{
