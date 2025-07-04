@@ -36,6 +36,7 @@ const FeaturedSection = () => {
         ))}
       </div>
 
+
       <div className='flex justify-center mt-20'>
         <button
           onClick={() => {
