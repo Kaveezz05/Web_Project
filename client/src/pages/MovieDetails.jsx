@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { dummyDateTimeData, dummyShowsData } from '../assets/assets';
 import { Heart, PlayCircleIcon, StarIcon } from 'lucide-react';
 import timeFormat from '../lib/timeFormat';
 import DateSelect from '../components/DateSelect';
+import MovieCard from '../components/MovieCard';
+import Loading from '../components/Loading'; // Import your Loading spinner
 
 const getLanguageName = (code) => {
   const map = {
@@ -20,25 +22,30 @@ const getLanguageName = (code) => {
 };
 
 const MovieDetails = () => {
+  const navigate = useNavigate();
   const { id } = useParams();
   const [show, setShow] = useState(null);
 
   useEffect(() => {
     const getShow = () => {
       const movie = dummyShowsData.find(
-        show => show._id === id || show.id?.toString() === id
+        (show) => show._id === id || show.id?.toString() === id
       );
       if (movie) {
         setShow({
           movie,
           dateTime: dummyDateTimeData,
         });
+      } else {
+        // Keep show as null if movie not found to keep showing loading spinner
+        setShow(null);
       }
     };
     getShow();
   }, [id]);
 
-  if (!show) return <div className="text-center py-20 text-gray-300">Loading...</div>;
+  // Show loading spinner if data not loaded or invalid ID
+  if (!show) return <Loading />;
 
   const { movie } = show;
 
@@ -69,10 +76,10 @@ const MovieDetails = () => {
             {movie.vote_average.toFixed(1)} User Rating
           </div>
 
-          <p className="text-sm text-gray-300">
+          <div className="text-sm text-gray-300">
             {movie.runtime ? timeFormat(movie.runtime) + ' · ' : ''}
             {movie.genres.map((g) => g.name).join(', ')} · {movie.release_date.split('-')[0]}
-          </p>
+          </div>
 
           <p className="text-gray-200 text-base max-w-2xl leading-relaxed">{movie.overview}</p>
 
@@ -82,13 +89,14 @@ const MovieDetails = () => {
               Watch Trailer
             </button>
             <a
-               href="#dateSelect"
-               onClick={(e) => {
+              href="#dateSelect"
+              onClick={(e) => {
                 e.preventDefault();
-               document.getElementById('dateSelect')?.scrollIntoView({ behavior: 'smooth' });
-         }}
-         className="px-10 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-md font-medium cursor-pointer active:scale-95">
-         Buy Tickets
+                document.getElementById('dateSelect')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className="px-10 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-md font-medium cursor-pointer active:scale-95"
+            >
+              Buy Tickets
             </a>
 
             <button className="bg-gray-700 p-2.5 rounded-full transition cursor-pointer active:scale-95">
@@ -108,11 +116,14 @@ const MovieDetails = () => {
                 className="flex flex-col items-center text-center min-w-[80px] group"
               >
                 <img
-                  src={cast.profile_path || 'https://via.placeholder.com/150'}
+                  src={cast.profile_path || 'https://www.movienewz.com/img/films/poster-holder.jpg'}
                   alt={cast.name}
-                  className="rounded-full h-20 aspect-square object-cover opacity-50 group-hover:opacity-100 hover:opacity-100 transition-opacity duration-300"
+                  className="rounded-full h-20 aspect-square object-cover transition-opacity duration-300"
                 />
-                <p className="font-medium text-xs mt-3 text-white leading-tight max-w-[80px] truncate">
+                <p
+                  title={cast.name}
+                  className="font-medium text-xs mt-3 text-white leading-tight max-w-[80px] truncate group-hover:whitespace-normal"
+                >
                   {cast.name}
                 </p>
               </div>
@@ -121,7 +132,30 @@ const MovieDetails = () => {
         </div>
       </div>
 
-      <DateSelect dateTime={show.dateTime} id={movie.id} />
+      <div id="dateSelect" className="mt-20">
+        <DateSelect dateTime={show.dateTime} id={movie.id} />
+      </div>
+
+      <div className="px-6 md:px-16 lg:px-36">
+        <p className="text-lg font-medium mt-20 mb-8 text-white">You May Also Like</p>
+        <div className="flex flex-wrap max-sm:justify-center gap-8">
+          {dummyShowsData.slice(0, 4).map((movie, index) => (
+            <MovieCard key={index} movie={movie} />
+          ))}
+        </div>
+
+        <div className="flex justify-center mt-20 relative z-20">
+          <button
+            onClick={() => {
+              navigate('/movies', { replace: true });
+              setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+            }}
+            className="px-10 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-md font-medium cursor-pointer"
+          >
+            Show More
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

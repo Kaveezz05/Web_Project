@@ -28,7 +28,7 @@ const HeroSection = () => {
           In Marvel Studios’ Guardians of the Galaxy Vol. 3 our beloved band of misfits are looking a little different these days. 
           Peter Quill, still reeling from the loss of Gamora, must rally his team around him to defend the universe and protect one of their own.
         </p>
-        <button onClick={() => navigate('/movies')} className='flex items-center gap-1 px-6 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-full font-meduim cursor-pointer'>
+        <button onClick={() => { navigate('/movies'); window.scrollTo(0, 0); }} className='flex items-center gap-1 px-6 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-full font-meduim cursor-pointer'>
             Explore Movies
             <ArrowRight className='w-5 h-5'/> 
         </button>
