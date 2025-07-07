@@ -37,14 +37,12 @@ const MovieDetails = () => {
           dateTime: dummyDateTimeData,
         });
       } else {
-        // Keep show as null if movie not found to keep showing loading spinner
         setShow(null);
       }
     };
     getShow();
   }, [id]);
 
-  // Show loading spinner if data not loaded or invalid ID
   if (!show) return <Loading />;
 
   const { movie } = show;
@@ -64,7 +62,7 @@ const MovieDetails = () => {
         />
 
         <div className="flex flex-col gap-5">
-          <p className="text-sm text-primary uppercase font-semibold tracking-wide">
+          <p className="text-sm text-red-600 uppercase font-semibold tracking-wide">
             {getLanguageName(movie.original_language)}
           </p>
           <h1 className="text-4xl md:text-5xl font-bold leading-tight">{movie.title}</h1>
@@ -94,7 +92,7 @@ const MovieDetails = () => {
                 e.preventDefault();
                 document.getElementById('dateSelect')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }}
-              className="px-10 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-md font-medium cursor-pointer active:scale-95"
+              className="px-10 py-3 text-sm bg-red-600 hover:bg-red-700 transition rounded-md font-medium cursor-pointer active:scale-95"
             >
               Buy Tickets
             </a>
@@ -150,7 +148,7 @@ const MovieDetails = () => {
               navigate('/movies', { replace: true });
               setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
             }}
-            className="px-10 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-md font-medium cursor-pointer"
+            className="px-10 py-3 text-sm bg-red-600 hover:bg-red-700 transition rounded-md font-medium cursor-pointer"
           >
             Show More
           </button>

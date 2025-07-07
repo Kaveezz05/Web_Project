@@ -7,7 +7,7 @@ const InputWithIcon = memo(({ icon: Icon, ...props }) => (
   <div className="relative">
     <input
       {...props}
-      className="w-full pr-10 p-3 rounded bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+      className="w-full pr-10 p-3 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E63946] transition"
     />
     <Icon className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
   </div>
@@ -74,25 +74,26 @@ const Login = () => {
 
   return (
     <>
+      {/* Login button or settings cog */}
       {!isAuthenticated ? (
         <button
           onClick={() => setShowLogin(true)}
-          className="px-4 py-1 sm:px-7 sm:py-2 bg-primary hover:bg-primary-dull transition rounded-full font-medium cursor-pointer"
+          className="px-5 py-2 bg-[#E63946] hover:bg-red-700 transition rounded-full font-semibold text-white"
         >
           Login
         </button>
       ) : (
         <div className="relative inline-block">
           <FaCog
-            className="text-white w-6 h-6 cursor-pointer hover:text-primary"
+            className="text-white w-6 h-6 cursor-pointer hover:text-[#E63946]"
             onClick={() => setShowSettingsDropdown((prev) => !prev)}
             title="Settings"
           />
           {showSettingsDropdown && (
-            <div className="absolute right-0 mt-2 w-28 bg-gray-800 rounded shadow-lg z-50 p-2 text-white">
+            <div className="absolute right-0 mt-2 w-28 bg-white/10 backdrop-blur-md rounded-lg shadow-lg z-50 p-2 text-white border border-white/20">
               <button
                 onClick={openLogoutPrompt}
-                className="block w-full text-left px-4 py-2 text-white hover:bg-red-600 rounded"
+                className="block w-full text-left px-4 py-2 hover:bg-red-600 rounded transition"
               >
                 Logout
               </button>
@@ -103,18 +104,24 @@ const Login = () => {
 
       {/* Login/Register Modal */}
       {showLogin && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-gray-900 rounded-xl shadow-lg p-6 text-white">
+        <div
+          className="
+            fixed inset-0 z-50 flex items-center justify-center
+            bg-black/80 backdrop-blur-sm overflow-auto min-h-screen
+          "
+        >
+          <div className="relative w-full max-w-md bg-white/10 border border-white/20 rounded-2xl shadow-xl p-8 text-white m-4">
             <button
               onClick={() => setShowLogin(false)}
-              className="absolute top-4 right-4 text-3xl font-bold text-gray-400 hover:text-red-500"
+              className="absolute top-4 right-4 text-3xl font-bold text-gray-300 hover:text-[#E63946] transition"
               aria-label="Close Login Modal"
+              type="button"
             >
               &times;
             </button>
 
-            <h1 className="text-4xl font-extrabold mb-8 select-none">
-              <span className="text-red-600">V</span>istaLite
+            <h1 className="text-5xl font-extrabold mb-8 select-none tracking-wide">
+              <span className="text-[#E63946]">V</span>istaLite
             </h1>
 
             <form
@@ -130,6 +137,7 @@ const Login = () => {
                     value={loginUsername}
                     onChange={(e) => setLoginUsername(e.target.value)}
                     required
+                    autoFocus
                   />
                   <InputWithIcon
                     icon={FaLock}
@@ -141,7 +149,7 @@ const Login = () => {
                   />
                   <button
                     type="submit"
-                    className="w-full py-3 bg-primary hover:bg-primary-dull transition rounded font-semibold"
+                    className="w-full py-3 bg-[#E63946] hover:bg-red-700 transition rounded-full font-semibold"
                   >
                     Sign In
                   </button>
@@ -150,7 +158,7 @@ const Login = () => {
                     <button
                       type="button"
                       onClick={() => setAction("register")}
-                      className="text-primary underline"
+                      className="text-[#E63946] underline hover:text-red-600"
                     >
                       Sign Up
                     </button>
@@ -165,6 +173,7 @@ const Login = () => {
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
                     required
+                    autoFocus
                   />
                   <InputWithIcon
                     icon={FaUser}
@@ -184,7 +193,7 @@ const Login = () => {
                   />
                   <button
                     type="submit"
-                    className="w-full py-3 bg-primary hover:bg-primary-dull transition rounded font-semibold"
+                    className="w-full py-3 bg-[#E63946] hover:bg-red-700 transition rounded-full font-semibold"
                   >
                     Sign Up
                   </button>
@@ -193,7 +202,7 @@ const Login = () => {
                     <button
                       type="button"
                       onClick={() => setAction("login")}
-                      className="text-primary underline"
+                      className="text-[#E63946] underline hover:text-red-600"
                     >
                       Sign In
                     </button>
@@ -207,15 +216,20 @@ const Login = () => {
 
       {/* Logout Password Prompt Modal */}
       {showLogoutPrompt && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50">
-          <div className="bg-gray-900 rounded-xl p-6 w-80 shadow-lg text-white flex flex-col gap-5">
+        <div
+          className="
+            fixed inset-0 z-60 flex items-center justify-center
+            bg-black/70 backdrop-blur-sm overflow-auto min-h-screen
+          "
+        >
+          <div className="bg-white/10 border border-white/20 rounded-2xl p-6 w-80 shadow-lg text-white flex flex-col gap-5 m-4">
             <h3 className="text-lg font-semibold text-center">Confirm Logout</h3>
             <input
               type="password"
               placeholder="Enter your password"
               value={logoutPasswordInput}
               onChange={(e) => setLogoutPasswordInput(e.target.value)}
-              className="p-3 rounded bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+              className="p-3 rounded-lg bg-white/20 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E63946] transition"
               autoFocus
             />
             {logoutError && (
@@ -228,13 +242,15 @@ const Login = () => {
                   setLogoutError("");
                   setLogoutPasswordInput("");
                 }}
-                className="px-5 py-2 rounded bg-gray-700 hover:bg-gray-600 transition font-semibold"
+                className="px-5 py-2 rounded-lg bg-white/20 hover:bg-white/30 transition font-semibold"
+                type="button"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmLogout}
-                className="px-5 py-2 rounded bg-red-600 hover:bg-red-700 transition font-semibold"
+                className="px-5 py-2 rounded-lg bg-[#E63946] hover:bg-red-700 transition font-semibold"
+                type="button"
               >
                 Logout
               </button>
@@ -247,4 +263,3 @@ const Login = () => {
 };
 
 export default Login;
- 

@@ -1,17 +1,61 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { dummyDateTimeData, dummyShowsData } from "../assets/assets";
+import { dummyDateTimeData, dummyShowsData, assets } from "../assets/assets";
 import Loading from "../components/Loading";
 import { ClockIcon } from "lucide-react";
 import isoTimeFormat from "../lib/isoTimeFormat";
+import BlurCircle from "../components/BlurCircle";
+import toast from "react-hot-toast";
 
 const SeatLayout = () => {
+  const groupRows = [
+    ["A", "B"],
+    ["C", "D"],
+    ["E", "F"],
+    ["G", "H"],
+    ["I", "J"],
+  ];
   const { id, date } = useParams();
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [selectedTime, setSelectedTime] = useState(null);
   const [show, setShow] = useState(null);
 
   const navigate = useNavigate();
+
+  const handleSeatClick = (seatId) => {
+    if (!selectedTime) {
+      return toast("Please select time first");
+    }
+    if (!selectedSeats.includes(seatId) && selectedSeats.length > 4) {
+      return toast("You can only select 5 seats");
+    }
+    setSelectedSeats((prev) =>
+      prev.includes(seatId)
+        ? prev.filter((seat) => seat !== seatId)
+        : [...prev, seatId]
+    );
+  };
+
+  const renderSeats = (row, count = 9) => (
+    <div key={row} className="flex gap-2 mt-2">
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        {Array.from({ length: count }, (_, i) => {
+          const seatId = `${row}${i + 1}`;
+          return (
+            <button
+              key={seatId}
+              onClick={() => handleSeatClick(seatId)}
+              className={`h-8 w-8 rounded border border-red-400 cursor-pointer ${
+                selectedSeats.includes(seatId) ? "bg-red-600 text-white" : ""
+              }`}
+            >
+              {seatId}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   useEffect(() => {
     const getShow = async () => {
@@ -29,15 +73,15 @@ const SeatLayout = () => {
   if (!show) return <Loading />;
 
   return (
-    <div className="flex flex-col md:flex-row px-6 md:px-16 lg:px-40 py-20 min-h-screen bg-black text-white">
+    <div className="flex flex-col md:flex-row px-6 md:px-16 lg:px-40 py-20 min-h-screen bg-black text-white relative">
       {/* Timing Section */}
-      <div className="w-full md:w-64 mb-10 md:mb-0 md:mr-10">
-        <div className="bg-red-950/30 rounded-xl p-6 shadow-xl w-full max-w-xs backdrop-blur-sm ring-1 ring-red-800/40">
+      <div className="w-full md:w-64 mb-10 md:mb-0 md:mr-10 mt-24">
+        <div className="bg-red-950/30 rounded-xl p-6 shadow-xl w-full max-w-xs backdrop-blur-sm ring-1 ring-red-800/40 relative z-10">
           <p className="text-white text-base font-semibold mb-4 border-b border-red-400 pb-2">
             Available Timings
           </p>
           <div className="space-y-2">
-            {show.dateTime[date].map((item, index) => (
+            {show.dateTime[date].map((item) => (
               <div
                 key={item.time}
                 onClick={() => setSelectedTime(item)}
@@ -56,9 +100,26 @@ const SeatLayout = () => {
         </div>
       </div>
 
-      {/* Seat Layout Placeholder */}
-      <div className="flex-1 flex justify-center items-center border border-dashed border-gray-600 rounded-lg p-10">
-        <p className="text-gray-400">Seat layout coming soon...</p>
+      {/* Seat Layout Section */}
+      <div className="relative flex-1 flex flex-col items-center max-md:mt-16 mt-24 z-10">
+        <BlurCircle top="-100px" left="-100px" size="200px" color="rgba(255, 0, 0, 0.3)" />
+        <BlurCircle bottom="0" right="0" size="160px" color="rgba(255, 0, 0, 0.3)" />
+        <h1 className="text-2xl font-semibold mb-4">Select your seat</h1>
+        <img src={assets.screenImage} alt="screen" />
+        <p className="text-gray-400 text-sm mb-6">SCREEN SIDE</p>
+
+        <div className="flex flex-col items-center mt-10 text-xs text-gray-300">
+          <div className="grid grid-cols-2 md:grid-cols-1 gap-8 md:gap-2 mb-6">
+            {groupRows[0].map((row) => renderSeats(row))}
+          </div>
+          <div className="grid grid-cols-2 gap-11">
+            {groupRows.slice(1).map((group, idx) => (
+              <div key={idx}>
+                {group.map((row) => renderSeats(row))}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
