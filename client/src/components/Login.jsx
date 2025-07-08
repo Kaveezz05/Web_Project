@@ -7,9 +7,9 @@ const InputWithIcon = memo(({ icon: Icon, ...props }) => (
   <div className="relative">
     <input
       {...props}
-      className="w-full pr-10 p-3 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E63946] transition"
+      className="w-full pr-10 p-3 rounded-lg bg-black/80 text-[#E5E9F0] placeholder-[#A3AED0] focus:outline-none focus:ring-2 focus:ring-[#2978B5] transition"
     />
-    <Icon className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+    <Icon className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A3AED0] pointer-events-none" />
   </div>
 ));
 
@@ -78,22 +78,22 @@ const Login = () => {
       {!isAuthenticated ? (
         <button
           onClick={() => setShowLogin(true)}
-          className="px-5 py-2 bg-[#E63946] hover:bg-red-700 transition rounded-full font-semibold text-white"
+          className="px-5 py-2 bg-[#2978B5] hover:bg-[#4A9EDE] transition rounded-full font-semibold text-[#E5E9F0]"
         >
           Login
         </button>
       ) : (
         <div className="relative inline-block">
           <FaCog
-            className="text-white w-6 h-6 cursor-pointer hover:text-[#E63946]"
+            className="text-[#E5E9F0] w-6 h-6 cursor-pointer hover:text-[#2978B5]"
             onClick={() => setShowSettingsDropdown((prev) => !prev)}
             title="Settings"
           />
           {showSettingsDropdown && (
-            <div className="absolute right-0 mt-2 w-28 bg-white/10 backdrop-blur-md rounded-lg shadow-lg z-50 p-2 text-white border border-white/20">
+            <div className="absolute right-0 mt-2 w-28 bg-black/80 backdrop-blur-md rounded-lg shadow-lg z-50 p-2 text-[#E5E9F0] border border-[#303D5A]">
               <button
                 onClick={openLogoutPrompt}
-                className="block w-full text-left px-4 py-2 hover:bg-red-600 rounded transition"
+                className="block w-full text-left px-4 py-2 hover:bg-[#2978B5] rounded transition"
               >
                 Logout
               </button>
@@ -107,13 +107,13 @@ const Login = () => {
         <div
           className="
             fixed inset-0 z-50 flex items-center justify-center
-            bg-black/80 backdrop-blur-sm overflow-auto min-h-screen
+            bg-black/90 backdrop-blur-sm overflow-auto min-h-screen
           "
         >
-          <div className="relative w-full max-w-md bg-white/10 border border-white/20 rounded-2xl shadow-xl p-8 text-white m-4">
+          <div className="relative w-full max-w-md bg-black/80 border border-[#303D5A] rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">
             <button
               onClick={() => setShowLogin(false)}
-              className="absolute top-4 right-4 text-3xl font-bold text-gray-300 hover:text-[#E63946] transition"
+              className="absolute top-4 right-4 text-3xl font-bold text-[#A3AED0] hover:text-[#2978B5] transition"
               aria-label="Close Login Modal"
               type="button"
             >
@@ -121,7 +121,7 @@ const Login = () => {
             </button>
 
             <h1 className="text-5xl font-extrabold mb-8 select-none tracking-wide">
-              <span className="text-[#E63946]">V</span>istaLite
+              <span className="text-[#2978B5]">V</span>istaLite
             </h1>
 
             <form
@@ -149,16 +149,16 @@ const Login = () => {
                   />
                   <button
                     type="submit"
-                    className="w-full py-3 bg-[#E63946] hover:bg-red-700 transition rounded-full font-semibold"
+                    className="w-full py-3 bg-[#2978B5] hover:bg-[#4A9EDE] transition rounded-full font-semibold"
                   >
                     Sign In
                   </button>
-                  <p className="text-center text-sm mt-4">
+                  <p className="text-center text-sm mt-4 text-[#A3AED0]">
                     Don’t have an account?{" "}
                     <button
                       type="button"
                       onClick={() => setAction("register")}
-                      className="text-[#E63946] underline hover:text-red-600"
+                      className="text-[#2978B5] underline hover:text-[#4A9EDE]"
                     >
                       Sign Up
                     </button>
@@ -193,16 +193,16 @@ const Login = () => {
                   />
                   <button
                     type="submit"
-                    className="w-full py-3 bg-[#E63946] hover:bg-red-700 transition rounded-full font-semibold"
+                    className="w-full py-3 bg-[#2978B5] hover:bg-[#4A9EDE] transition rounded-full font-semibold"
                   >
                     Sign Up
                   </button>
-                  <p className="text-center text-sm mt-4">
+                  <p className="text-center text-sm mt-4 text-[#A3AED0]">
                     Already have an account?{" "}
                     <button
                       type="button"
                       onClick={() => setAction("login")}
-                      className="text-[#E63946] underline hover:text-red-600"
+                      className="text-[#2978B5] underline hover:text-[#4A9EDE]"
                     >
                       Sign In
                     </button>
@@ -214,43 +214,36 @@ const Login = () => {
         </div>
       )}
 
-      {/* Logout Password Prompt Modal */}
+      {/* Logout Confirmation Modal */}
       {showLogoutPrompt && (
         <div
           className="
-            fixed inset-0 z-60 flex items-center justify-center
-            bg-black/70 backdrop-blur-sm overflow-auto min-h-screen
+            fixed inset-0 z-50 flex items-center justify-center
+            bg-black/90 backdrop-blur-sm overflow-auto min-h-screen
           "
         >
-          <div className="bg-white/10 border border-white/20 rounded-2xl p-6 w-80 shadow-lg text-white flex flex-col gap-5 m-4">
-            <h3 className="text-lg font-semibold text-center">Confirm Logout</h3>
+          <div className="relative w-full max-w-md bg-black/80 border border-[#303D5A] rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">
+            <h2 className="text-2xl mb-6 font-semibold">Confirm Logout</h2>
+            <p className="mb-4">Please enter your password to logout:</p>
             <input
               type="password"
-              placeholder="Enter your password"
               value={logoutPasswordInput}
               onChange={(e) => setLogoutPasswordInput(e.target.value)}
-              className="p-3 rounded-lg bg-white/20 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E63946] transition"
-              autoFocus
+              className="w-full p-3 rounded-lg bg-black/80 text-[#E5E9F0] border border-[#4A9EDE] focus:outline-none focus:ring-2 focus:ring-[#2978B5] mb-4"
             />
             {logoutError && (
-              <p className="text-red-400 text-center text-sm">{logoutError}</p>
+              <p className="text-red-500 mb-4">{logoutError}</p>
             )}
-            <div className="flex justify-end gap-4 mt-3">
+            <div className="flex justify-end gap-4">
               <button
-                onClick={() => {
-                  setShowLogoutPrompt(false);
-                  setLogoutError("");
-                  setLogoutPasswordInput("");
-                }}
-                className="px-5 py-2 rounded-lg bg-white/20 hover:bg-white/30 transition font-semibold"
-                type="button"
+                onClick={() => setShowLogoutPrompt(false)}
+                className="px-4 py-2 rounded bg-[#303D5A] hover:bg-[#4A9EDE] transition"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmLogout}
-                className="px-5 py-2 rounded-lg bg-[#E63946] hover:bg-red-700 transition font-semibold"
-                type="button"
+                className="px-4 py-2 rounded bg-[#2978B5] hover:bg-[#4A9EDE] transition"
               >
                 Logout
               </button>
