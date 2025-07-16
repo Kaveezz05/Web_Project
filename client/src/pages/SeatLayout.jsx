@@ -1,70 +1,76 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import Loading from '../components/Loading';
-import { ArrowRightIcon, ClockIcon } from 'lucide-react';
-import isoTimeFormat from '../lib/isoTimeFormat';
-import toast from 'react-hot-toast';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { dummyDateTimeData, dummyShowsData } from "../assets/assets";
+import Loading from "../components/Loading";
+import { ArrowRightIcon, ClockIcon } from "lucide-react";
+import isoTimeFormat from "../lib/isoTimeFormat";
+import BlurCircle from "../components/BlurCircle";
+import toast from "react-hot-toast";
 
 const SeatLayout = () => {
   const groupRows = [
-    ['A', 'B'],
-    ['C', 'D'],
-    ['E', 'F'],
-    ['G', 'H'],
-    ['I', 'J'],
+    ["A", "B"],
+    ["C", "D"],
+    ["E", "F"],
+    ["G", "H"],
+    ["I", "J"],
   ];
-
   const { id, date } = useParams();
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [selectedTime, setSelectedTime] = useState(null);
   const [show, setShow] = useState(null);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    api.get(`/movies/${id}`)
-      .then((res) => {
-        setShow({
-          movie: res.data.movie,
-          dateTime: res.data.dateTime,
-        });
-      })
-      .catch(() => setShow(null));
-  }, [id]);
+  const navigate = useNavigate();
 
   const handleSeatClick = (seatId) => {
     if (!selectedTime) {
-      toast.error('Please select time first');
-      return;
+      return toast("Please select time first");
     }
-    if (!selectedSeats.includes(seatId) && selectedSeats.length >= 5) {
-      toast.error('You can only select 5 seats');
-      return;
+    if (!selectedSeats.includes(seatId) && selectedSeats.length > 4) {
+      return toast("You can only select 5 seats");
     }
     setSelectedSeats((prev) =>
-      prev.includes(seatId) ? prev.filter((seat) => seat !== seatId) : [...prev, seatId]
+      prev.includes(seatId)
+        ? prev.filter((seat) => seat !== seatId)
+        : [...prev, seatId]
     );
   };
 
   const renderSeats = (row, count = 9) => (
     <div key={row} className="flex gap-2 mt-2">
-      {Array.from({ length: count }, (_, i) => {
-        const seatId = `${row}${i + 1}`;
-        return (
-          <button
-            key={seatId}
-            onClick={() => handleSeatClick(seatId)}
-            className={`h-8 w-8 rounded border cursor-pointer ${
-              selectedSeats.includes(seatId)
-                ? 'bg-[#2978B5] text-[#E5E9F0] border-[#2978B5]'
-                : 'border-[#4A9EDE] text-[#A3AED0] hover:bg-[#4A9EDE] hover:text-[#E5E9F0]'
-            }`}
-          >
-            {seatId}
-          </button>
-        );
-      })}
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        {Array.from({ length: count }, (_, i) => {
+          const seatId = `${row}${i + 1}`;
+          return (
+            <button
+              key={seatId}
+              onClick={() => handleSeatClick(seatId)}
+              className={`h-8 w-8 rounded border cursor-pointer ${
+                selectedSeats.includes(seatId)
+                  ? "bg-[#2978B5] text-[#E5E9F0] border-[#2978B5]"
+                  : "border-[#4A9EDE] text-[#A3AED0] hover:bg-[#4A9EDE] hover:text-[#E5E9F0]"
+              }`}
+            >
+              {seatId}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
+
+  useEffect(() => {
+    const getShow = async () => {
+      const foundShow = dummyShowsData.find((show) => show._id === id);
+      if (foundShow) {
+        setShow({
+          movie: foundShow,
+          dateTime: dummyDateTimeData,
+        });
+      }
+    };
+    getShow();
+  }, [id]);
 
   if (!show) return <Loading />;
 
@@ -77,15 +83,16 @@ const SeatLayout = () => {
             Available Timings
           </p>
           <div className="space-y-2">
-            {show.dateTime?.[date]?.map((item) => (
+            {show.dateTime[date].map((item) => (
               <div
                 key={item.time}
                 onClick={() => setSelectedTime(item)}
-                className={`flex items-center gap-2 px-4 py-2 rounded cursor-pointer transition-all ${
-                  selectedTime?.time === item.time
-                    ? 'bg-[#2978B5] text-[#E5E9F0]'
-                    : 'hover:bg-[#4A9EDE]/30 text-[#A3AED0]'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded cursor-pointer transition-all
+                  ${
+                    selectedTime?.time === item.time
+                      ? "bg-[#2978B5] text-[#E5E9F0]"
+                      : "hover:bg-[#4A9EDE]/30 text-[#A3AED0]"
+                  }`}
               >
                 <ClockIcon className="w-4 h-4" />
                 <p className="text-sm">{isoTimeFormat(item.time)}</p>
@@ -97,8 +104,12 @@ const SeatLayout = () => {
 
       {/* Seat Layout Section */}
       <div className="relative flex-1 flex flex-col items-center max-md:mt-16 mt-24 z-10">
+        <BlurCircle top="-100px" left="-100px" size="200px" color="rgba(41,120,181,0.3)" />
+        <BlurCircle bottom="0" right="0" size="160px" color="rgba(41,120,181,0.3)" />
+
         <h1 className="text-2xl font-semibold mb-4 text-[#E5E9F0]">Select your seat</h1>
 
+        {/* Curved blue glowing line as screen */}
         <div
           className="w-64 h-2 mx-auto mb-3"
           style={{
@@ -107,7 +118,9 @@ const SeatLayout = () => {
             boxShadow: '0 0 10px rgba(41,120,181,0.8)',
           }}
         />
-        <p className="text-[#A3AED0] text-sm mb-6 text-center tracking-widest">SCREEN SIDE</p>
+        <p className="text-[#A3AED0] text-sm mb-6 text-center tracking-widest">
+          SCREEN SIDE
+        </p>
 
         <div className="flex flex-col items-center mt-10 text-xs">
           <div className="grid grid-cols-2 md:grid-cols-1 gap-8 md:gap-2 mb-6">
@@ -115,26 +128,17 @@ const SeatLayout = () => {
           </div>
           <div className="grid grid-cols-2 gap-11">
             {groupRows.slice(1).map((group, idx) => (
-              <div key={idx}>{group.map((row) => renderSeats(row))}</div>
+              <div key={idx}>
+                {group.map((row) => renderSeats(row))}
+              </div>
             ))}
           </div>
         </div>
 
+        {/* Centered Button */}
         <div className="mt-12 flex justify-center w-full">
           <button
-            onClick={() => {
-              if (selectedSeats.length === 0) {
-                toast.error('Please select at least one seat');
-                return;
-              }
-              if (!selectedTime) {
-                toast.error('Please select a show time');
-                return;
-              }
-              navigate('/my-bookings', {
-                state: { selectedSeats, showDateTime: selectedTime, movieId: id },
-              });
-            }}
+            onClick={() => navigate('/my-bookings')}
             className="flex items-center gap-2 px-10 py-3 text-sm bg-[#2978B5] hover:bg-[#4A9EDE] transition rounded-full font-medium cursor-pointer active:scale-95 text-[#E5E9F0]"
           >
             Proceed to Checkout

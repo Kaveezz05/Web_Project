@@ -1,22 +1,22 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { StarIcon } from 'lucide-react';
-import timeFormat from '../lib/timeFormat';
+import { StarIcon } from 'lucide-react'
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+import timeFormat from '../lib/timeFormat'
 
 const MovieCard = ({ movie }) => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   return (
     <div className="flex flex-col bg-black rounded-2xl shadow-lg overflow-hidden w-64 transition-transform hover:scale-105 duration-300 border border-[#303D5A]">
       <div
         className="relative cursor-pointer h-52 w-full"
         onClick={() => {
-          navigate(`/movies/${movie._id}`);
-          window.scrollTo(0, 0);
+          navigate(`/movies/${movie._id}`)
+          scrollTo(0, 0)
         }}
       >
         <img
-          src={movie.poster_path || movie.backdrop_path}
+          src={`https://image.tmdb.org/t/p/w500${movie.backdrop_path}`}
           alt={movie.title}
           className="h-full w-full object-cover rounded-t-2xl"
         />
@@ -27,7 +27,7 @@ const MovieCard = ({ movie }) => {
         <h3 className="font-semibold text-lg truncate">{movie.title}</h3>
 
         <p className="text-sm text-[#A3AED0]">
-          {movie.release_date ? new Date(movie.release_date).getFullYear() : 'N/A'} ·{' '}
+          {new Date(movie.release_date).getFullYear()} ·{' '}
           {movie.genres?.slice(0, 2).map((g) => g.name).join(' | ')} ·{' '}
           {movie.runtime ? timeFormat(movie.runtime) : 'N/A'}
         </p>
@@ -35,8 +35,8 @@ const MovieCard = ({ movie }) => {
         <div className="flex items-center justify-between mt-3">
           <button
             onClick={() => {
-              navigate(`/movies/${movie._id}`);
-              window.scrollTo(0, 0);
+              navigate(`/movies/${movie._id}`)
+              scrollTo(0, 0)
             }}
             className="px-4 py-1.5 text-xs bg-[#2978B5] hover:bg-[#4A9EDE] transition rounded-full font-medium text-[#E5E9F0]"
           >
@@ -50,7 +50,7 @@ const MovieCard = ({ movie }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default MovieCard;
+export default MovieCard

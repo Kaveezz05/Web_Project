@@ -15,7 +15,7 @@ const InputWithIcon = memo(({ icon: Icon, ...props }) => (
 
 const Login = () => {
   const [showLogin, setShowLogin] = useState(false);
-  const [action, setAction] = useState("login");
+  const [action, setAction] = useState("login"); // 'login' or 'register'
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   const [showLogoutPrompt, setShowLogoutPrompt] = useState(false);
@@ -32,23 +32,73 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    if (loginUsername && loginPassword) {
-      setIsAuthenticated(true);
-      setShowLogin(false);
-      setShowSettingsDropdown(false);
-      navigate("/");
-    } else {
+    if (!loginUsername || !loginPassword) {
       alert("Please enter username and password");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost/vistalite/login.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: loginUsername,
+          password: loginPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setIsAuthenticated(true);
+        setShowLogin(false);
+        setShowSettingsDropdown(false);
+        navigate("/");
+      } else {
+        alert(data.message || "Login failed");
+      }
+    } catch (error) {
+      alert("Error connecting to server");
     }
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    alert("Registration is currently not implemented.");
-    setAction("login");
+
+    if (!regEmail || !regUsername || !regPassword) {
+      alert("Please fill all registration fields");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost/vistalite/register.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: regEmail,
+          username: regUsername,
+          password: regPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert("Registration successful. Please login.");
+        setAction("login");
+      } else {
+        alert(data.message || "Registration failed");
+      }
+    } catch (error) {
+      alert("Error connecting to server");
+    }
   };
 
   const openLogoutPrompt = () => {

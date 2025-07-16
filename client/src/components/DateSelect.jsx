@@ -1,23 +1,27 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import { ChevronsLeftIcon } from 'lucide-react';
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ChevronRightIcon, ChevronsLeftIcon } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 const DateSelect = ({ dateTime = {}, id }) => {
-  const navigate = useNavigate();
-  const [selected, setSelected] = useState(null);
+  const navigate = useNavigate()
+  const [selected, setSelected] = useState(null)
 
   const onBookHandler = () => {
     if (!selected) {
-      toast.error('Please select a date');
-      return;
+      toast.error('Please select a date')
+      return
     }
-    navigate(`/movies/${id}/${selected}`);
-    window.scrollTo(0, 0);
-  };
+    navigate(`/movies/${id}/${selected}`)
+    window.scrollTo(0, 0)
+  }
 
   if (!dateTime || Object.keys(dateTime).length === 0) {
-    return <div className="pt-30 px-6 md:px-16 lg:px-36 mt-20 text-[#E5E9F0] bg-black">No dates available.</div>;
+    return (
+      <div className="pt-30 px-6 md:px-16 lg:px-36 mt-20 text-[#E5E9F0] bg-black">
+        No dates available.
+      </div>
+    )
   }
 
   return (
@@ -33,19 +37,25 @@ const DateSelect = ({ dateTime = {}, id }) => {
                   <button
                     key={date}
                     onClick={() => setSelected(date)}
-                    className={`flex flex-col items-center justify-center h-16 w-16 rounded-xl cursor-pointer relative transition-all duration-300 ${
-                      selected === date
-                        ? 'scale-105 border-2 border-[#2978B5] bg-[#2978B5] text-[#E5E9F0] shadow-[0_0_8px_rgba(41,120,181,0.8)]'
-                        : 'scale-100 border border-[#4A9EDE]/70 bg-[#000]/10 text-[#E5E9F0] hover:bg-[#4A9EDE]/40'
-                    }`}
+                    className={`flex flex-col items-center justify-center h-16 w-16 rounded-xl cursor-pointer relative transition-all duration-300
+                      ${
+                        selected === date
+                          ? 'scale-105 border-2 border-[#2978B5] bg-[#2978B5] text-[#E5E9F0] shadow-[0_0_8px_rgba(41,120,181,0.8)]'
+                          : 'scale-100 border border-[#4A9EDE]/70 bg-[#000]/10 text-[#E5E9F0] hover:bg-[#4A9EDE]/40'
+                      }
+                    `}
                     style={{
                       letterSpacing: selected === date ? '0.05em' : 'normal',
                       textShadow: selected === date ? '0 0 6px rgba(255,255,255,0.8)' : 'none',
                     }}
                     type="button"
                   >
-                    <span className="text-lg font-bold">{new Date(date).getDate()}</span>
-                    <span className="text-xs">{new Date(date).toLocaleString('en-US', { month: 'short' })}</span>
+                    <span className="text-lg font-bold">
+                      {new Date(date).getDate()}
+                    </span>
+                    <span className="text-xs">
+                      {new Date(date).toLocaleString('en-US', { month: 'short' })}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -62,7 +72,7 @@ const DateSelect = ({ dateTime = {}, id }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default DateSelect;
+export default DateSelect
