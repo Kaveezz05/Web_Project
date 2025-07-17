@@ -15,10 +15,11 @@ const InputWithIcon = memo(({ icon: Icon, ...props }) => (
 
 const Login = () => {
   const [showLogin, setShowLogin] = useState(false);
-  const [action, setAction] = useState("login"); // 'login' or 'register'
+  const [action, setAction] = useState("login");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   const [showLogoutPrompt, setShowLogoutPrompt] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -27,104 +28,100 @@ const Login = () => {
   const [regUsername, setRegUsername] = useState("");
   const [regPassword, setRegPassword] = useState("");
 
-  const [logoutPasswordInput, setLogoutPasswordInput] = useState("");
-  const [logoutError, setLogoutError] = useState("");
-
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    if (!loginUsername || !loginPassword) {
+    if (!loginUsername.trim() || !loginPassword.trim()) {
       alert("Please enter username and password");
+      setLoading(false);
       return;
     }
 
     try {
-      const response = await fetch("http://localhost/vistalite/login.php", {
+      const res = await fetch("http://localhost/vistalite/login.php", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: loginUsername,
-          password: loginPassword,
+          username: loginUsername.trim(),
+          password: loginPassword.trim(),
         }),
       });
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (data.success) {
-        setIsAuthenticated(true);
-        setShowLogin(false);
-        setShowSettingsDropdown(false);
-        navigate("/");
-      } else {
-        alert(data.message || "Login failed");
+      if (!res.ok || data.error || !data.success) {
+        alert(data.error || "Login failed");
+        setLoading(false);
+        return;
       }
+
+      alert("Login successful");
+      setIsAuthenticated(true);
+      setShowLogin(false);
+      setLoginUsername("");
+      setLoginPassword("");
+      setLoading(false);
+      navigate("/");
     } catch (error) {
-      alert("Error connecting to server");
+      console.error("Login error:", error);
+      alert("Network error. Make sure XAMPP is running and login.php is accessible.");
+      setLoading(false);
     }
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    if (!regEmail || !regUsername || !regPassword) {
+    if (!regEmail.trim() || !regUsername.trim() || !regPassword.trim()) {
       alert("Please fill all registration fields");
+      setLoading(false);
       return;
     }
 
     try {
-      const response = await fetch("http://localhost/vistalite/register.php", {
+      const res = await fetch("http://localhost/vistalite/register.php", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: regEmail,
-          username: regUsername,
-          password: regPassword,
+          email: regEmail.trim(),
+          username: regUsername.trim(),
+          password: regPassword.trim(),
         }),
       });
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (data.success) {
-        alert("Registration successful. Please login.");
-        setAction("login");
-      } else {
-        alert(data.message || "Registration failed");
+      if (!res.ok || data.error || !data.success) {
+        alert(data.error || "Registration failed");
+        setLoading(false);
+        return;
       }
-    } catch (error) {
-      alert("Error connecting to server");
-    }
-  };
 
-  const openLogoutPrompt = () => {
-    setLogoutPasswordInput("");
-    setLogoutError("");
-    setShowLogoutPrompt(true);
-    setShowSettingsDropdown(false);
+      alert("Registration successful");
+      setAction("login");
+      setRegEmail("");
+      setRegUsername("");
+      setRegPassword("");
+      setLoading(false);
+    } catch (error) {
+      console.error("Registration error:", error);
+      alert("Network error. Make sure XAMPP is running and register.php is accessible.");
+      setLoading(false);
+    }
   };
 
   const confirmLogout = () => {
-    if (logoutPasswordInput === loginPassword) {
-      setIsAuthenticated(false);
-      setShowLogoutPrompt(false);
-      setLoginUsername("");
-      setLoginPassword("");
-      setLogoutPasswordInput("");
-      setLogoutError("");
-      navigate("/");
-    } else {
-      setLogoutError("Incorrect password. Please try again.");
-    }
+    setIsAuthenticated(false);
+    setShowLogoutPrompt(false);
+    navigate("/");
   };
 
   return (
     <>
-      {/* Login button or settings cog */}
       {!isAuthenticated ? (
         <button
           onClick={() => setShowLogin(true)}
@@ -142,7 +139,10 @@ const Login = () => {
           {showSettingsDropdown && (
             <div className="absolute right-0 mt-2 w-28 bg-black/80 backdrop-blur-md rounded-lg shadow-lg z-50 p-2 text-[#E5E9F0] border border-[#303D5A]">
               <button
-                onClick={openLogoutPrompt}
+                onClick={() => {
+                  setShowSettingsDropdown(false);
+                  setShowLogoutPrompt(true);
+                }}
                 className="block w-full text-left px-4 py-2 hover:bg-[#2978B5] rounded transition"
               >
                 Logout
@@ -152,14 +152,8 @@ const Login = () => {
         </div>
       )}
 
-      {/* Login/Register Modal */}
       {showLogin && (
-        <div
-          className="
-            fixed inset-0 z-50 flex items-center justify-center
-            bg-black/90 backdrop-blur-sm overflow-auto min-h-screen
-          "
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm min-h-screen">
           <div className="relative w-full max-w-md bg-black/80 border border-[#303D5A] rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">
             <button
               onClick={() => setShowLogin(false)}
@@ -170,7 +164,7 @@ const Login = () => {
               &times;
             </button>
 
-            <h1 className="text-5xl font-extrabold mb-8 select-none tracking-wide">
+            <h1 className="text-5xl font-extrabold mb-8 tracking-wide">
               <span className="text-[#2978B5]">V</span>istaLite
             </h1>
 
@@ -188,6 +182,7 @@ const Login = () => {
                     onChange={(e) => setLoginUsername(e.target.value)}
                     required
                     autoFocus
+                    disabled={loading}
                   />
                   <InputWithIcon
                     icon={FaLock}
@@ -196,12 +191,14 @@ const Login = () => {
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     required
+                    disabled={loading}
                   />
                   <button
                     type="submit"
-                    className="w-full py-3 bg-[#2978B5] hover:bg-[#4A9EDE] transition rounded-full font-semibold"
+                    disabled={loading}
+                    className="w-full py-3 bg-[#2978B5] hover:bg-[#4A9EDE] transition rounded-full font-semibold disabled:opacity-50"
                   >
-                    Sign In
+                    {loading ? "Signing In..." : "Sign In"}
                   </button>
                   <p className="text-center text-sm mt-4 text-[#A3AED0]">
                     Don’t have an account?{" "}
@@ -209,6 +206,7 @@ const Login = () => {
                       type="button"
                       onClick={() => setAction("register")}
                       className="text-[#2978B5] underline hover:text-[#4A9EDE]"
+                      disabled={loading}
                     >
                       Sign Up
                     </button>
@@ -224,6 +222,7 @@ const Login = () => {
                     onChange={(e) => setRegEmail(e.target.value)}
                     required
                     autoFocus
+                    disabled={loading}
                   />
                   <InputWithIcon
                     icon={FaUser}
@@ -232,6 +231,7 @@ const Login = () => {
                     value={regUsername}
                     onChange={(e) => setRegUsername(e.target.value)}
                     required
+                    disabled={loading}
                   />
                   <InputWithIcon
                     icon={FaLock}
@@ -240,12 +240,14 @@ const Login = () => {
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     required
+                    disabled={loading}
                   />
                   <button
                     type="submit"
-                    className="w-full py-3 bg-[#2978B5] hover:bg-[#4A9EDE] transition rounded-full font-semibold"
+                    disabled={loading}
+                    className="w-full py-3 bg-[#2978B5] hover:bg-[#4A9EDE] transition rounded-full font-semibold disabled:opacity-50"
                   >
-                    Sign Up
+                    {loading ? "Signing Up..." : "Sign Up"}
                   </button>
                   <p className="text-center text-sm mt-4 text-[#A3AED0]">
                     Already have an account?{" "}
@@ -253,6 +255,7 @@ const Login = () => {
                       type="button"
                       onClick={() => setAction("login")}
                       className="text-[#2978B5] underline hover:text-[#4A9EDE]"
+                      disabled={loading}
                     >
                       Sign In
                     </button>
@@ -264,26 +267,11 @@ const Login = () => {
         </div>
       )}
 
-      {/* Logout Confirmation Modal */}
       {showLogoutPrompt && (
-        <div
-          className="
-            fixed inset-0 z-50 flex items-center justify-center
-            bg-black/90 backdrop-blur-sm overflow-auto min-h-screen
-          "
-        >
-          <div className="relative w-full max-w-md bg-black/80 border border-[#303D5A] rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm min-h-screen">
+          <div className="w-full max-w-md bg-black/80 border border-[#303D5A] rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">
             <h2 className="text-2xl mb-6 font-semibold">Confirm Logout</h2>
-            <p className="mb-4">Please enter your password to logout:</p>
-            <input
-              type="password"
-              value={logoutPasswordInput}
-              onChange={(e) => setLogoutPasswordInput(e.target.value)}
-              className="w-full p-3 rounded-lg bg-black/80 text-[#E5E9F0] border border-[#4A9EDE] focus:outline-none focus:ring-2 focus:ring-[#2978B5] mb-4"
-            />
-            {logoutError && (
-              <p className="text-red-500 mb-4">{logoutError}</p>
-            )}
+            <p className="mb-4">Are you sure you want to logout?</p>
             <div className="flex justify-end gap-4">
               <button
                 onClick={() => setShowLogoutPrompt(false)}
@@ -305,4 +293,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Login; 
