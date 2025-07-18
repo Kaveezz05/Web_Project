@@ -33,6 +33,7 @@ const MyBookings = () => {
   const [successMessage, setSuccessMessage] = useState("");
 
   const getMyBookings = async () => {
+    // Here, you fetch real booking data in real use case
     setBookings(dummyBookingData);
     setIsLoading(false);
   };
@@ -196,150 +197,162 @@ const MyBookings = () => {
         >
           <form
             onSubmit={handlePaymentSubmit}
-            className="bg-[#0B1E3A] rounded-lg p-6 w-full max-w-md mx-4 shadow-lg relative text-white"
+            className="relative bg-[#2978B5]/10 rounded-xl p-8 max-w-md w-full mx-4 shadow-lg border border-[#2978B5] backdrop-blur-md text-white"
             onClick={(e) => e.stopPropagation()} // prevent modal close when clicking inside form
             noValidate
           >
-            <h2 className="text-2xl font-semibold mb-6 border-b border-[#2978B5] pb-2">
-              Complete Your Payment
-            </h2>
-
-            {/* Full Name */}
-            <label htmlFor="fullName" className="block mb-1 font-semibold text-[#7AA7D9]">
-              Full Name
-            </label>
-            <input
-              id="fullName"
-              name="fullName"
-              type="text"
-              value={formData.fullName}
-              onChange={handleInputChange}
-              className={`w-full mb-4 px-3 py-2 rounded-md bg-[#122A57] border ${
-                errors.fullName ? "border-red-500" : "border-[#2978B5]"
-              } text-white placeholder-[#5D7DB3] focus:outline-none focus:ring-2 focus:ring-[#4A9EDE]`}
-              placeholder="John Doe"
-              required
+            {/* BlurCircle positioned behind form content */}
+            <BlurCircle
+              top="-80px"
+              right="-80px"
+              size="280px"
+              color="rgba(41,120,181,0.25)"
+              style={{ position: "absolute", zIndex: 0 }}
             />
-            {errors.fullName && <p className="text-red-500 text-xs mb-3">{errors.fullName}</p>}
 
-            {/* ID Number */}
-            <label htmlFor="idNumber" className="block mb-1 font-semibold text-[#7AA7D9]">
-              ID Number
-            </label>
-            <input
-              id="idNumber"
-              name="idNumber"
-              type="text"
-              value={formData.idNumber}
-              onChange={handleInputChange}
-              className={`w-full mb-4 px-3 py-2 rounded-md bg-[#122A57] border ${
-                errors.idNumber ? "border-red-500" : "border-[#2978B5]"
-              } text-white placeholder-[#5D7DB3] focus:outline-none focus:ring-2 focus:ring-[#4A9EDE]`}
-              placeholder="123456789V"
-              required
-            />
-            {errors.idNumber && <p className="text-red-500 text-xs mb-3">{errors.idNumber}</p>}
+            {/* Form content container */}
+            <div className="relative z-10 space-y-5">
+              <h2 className="text-3xl font-bold mb-4 border-b border-[#4A9EDE] pb-2">
+                Complete Your Payment
+              </h2>
 
-            {/* Address */}
-            <label htmlFor="address" className="block mb-1 font-semibold text-[#7AA7D9]">
-              Address
-            </label>
-            <textarea
-              id="address"
-              name="address"
-              value={formData.address}
-              onChange={handleInputChange}
-              className={`w-full mb-4 px-3 py-2 rounded-md bg-[#122A57] border ${
-                errors.address ? "border-red-500" : "border-[#2978B5]"
-              } text-white placeholder-[#5D7DB3] resize-none focus:outline-none focus:ring-2 focus:ring-[#4A9EDE]`}
-              placeholder="123 Main St, City, Country"
-              rows={3}
-              required
-            />
-            {errors.address && <p className="text-red-500 text-xs mb-3">{errors.address}</p>}
+              {/* Full Name */}
+              <label htmlFor="fullName" className="block mb-1 font-semibold text-[#7AA7D9]">
+                Full Name
+              </label>
+              <input
+                id="fullName"
+                name="fullName"
+                type="text"
+                value={formData.fullName}
+                onChange={handleInputChange}
+                className={`w-full px-4 py-2 rounded-lg bg-[#122A57] border ${
+                  errors.fullName ? "border-red-500" : "border-[#4A9EDE]"
+                } text-white placeholder-[#5D7DB3] focus:outline-none focus:ring-2 focus:ring-[#4A9EDE] transition`}
+                placeholder="John Doe"
+                required
+              />
+              {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
 
-            {/* Card Number */}
-            <label htmlFor="cardNumber" className="block mb-1 font-semibold text-[#7AA7D9]">
-              Card Number
-            </label>
-            <input
-              id="cardNumber"
-              name="cardNumber"
-              type="text"
-              inputMode="numeric"
-              maxLength={19}
-              placeholder="1234 5678 9012 3456"
-              value={formData.cardNumber}
-              onChange={handleInputChange}
-              className={`w-full mb-4 px-3 py-2 rounded-md bg-[#122A57] border ${
-                errors.cardNumber ? "border-red-500" : "border-[#2978B5]"
-              } text-white placeholder-[#5D7DB3] focus:outline-none focus:ring-2 focus:ring-[#4A9EDE]`}
-              required
-            />
-            {errors.cardNumber && <p className="text-red-500 text-xs mb-3">{errors.cardNumber}</p>}
+              {/* ID Number */}
+              <label htmlFor="idNumber" className="block mb-1 font-semibold text-[#7AA7D9]">
+                ID Number
+              </label>
+              <input
+                id="idNumber"
+                name="idNumber"
+                type="text"
+                value={formData.idNumber}
+                onChange={handleInputChange}
+                className={`w-full px-4 py-2 rounded-lg bg-[#122A57] border ${
+                  errors.idNumber ? "border-red-500" : "border-[#4A9EDE]"
+                } text-white placeholder-[#5D7DB3] focus:outline-none focus:ring-2 focus:ring-[#4A9EDE] transition`}
+                placeholder="123456789V"
+                required
+              />
+              {errors.idNumber && <p className="text-red-500 text-xs mt-1">{errors.idNumber}</p>}
 
-            <div className="flex gap-4 mb-6">
-              {/* Expiry */}
-              <div className="flex-1">
-                <label htmlFor="expiry" className="block mb-1 font-semibold text-[#7AA7D9]">
-                  Expiry (MM/YY)
-                </label>
-                <input
-                  id="expiry"
-                  name="expiry"
-                  type="text"
-                  maxLength={5}
-                  placeholder="MM/YY"
-                  value={formData.expiry}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 rounded-md bg-[#122A57] border ${
-                    errors.expiry ? "border-red-500" : "border-[#2978B5]"
-                  } text-white placeholder-[#5D7DB3] focus:outline-none focus:ring-2 focus:ring-[#4A9EDE]`}
-                  required
-                />
-                {errors.expiry && <p className="text-red-500 text-xs mt-1">{errors.expiry}</p>}
+              {/* Address */}
+              <label htmlFor="address" className="block mb-1 font-semibold text-[#7AA7D9]">
+                Address
+              </label>
+              <textarea
+                id="address"
+                name="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                className={`w-full px-4 py-2 rounded-lg bg-[#122A57] border ${
+                  errors.address ? "border-red-500" : "border-[#4A9EDE]"
+                } text-white placeholder-[#5D7DB3] resize-none focus:outline-none focus:ring-2 focus:ring-[#4A9EDE] transition`}
+                placeholder="123 Main St, City, Country"
+                rows={3}
+                required
+              />
+              {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
+
+              {/* Card Number */}
+              <label htmlFor="cardNumber" className="block mb-1 font-semibold text-[#7AA7D9]">
+                Card Number
+              </label>
+              <input
+                id="cardNumber"
+                name="cardNumber"
+                type="text"
+                inputMode="numeric"
+                maxLength={19}
+                placeholder="1234 5678 9012 3456"
+                value={formData.cardNumber}
+                onChange={handleInputChange}
+                className={`w-full px-4 py-2 rounded-lg bg-[#122A57] border ${
+                  errors.cardNumber ? "border-red-500" : "border-[#4A9EDE]"
+                } text-white placeholder-[#5D7DB3] focus:outline-none focus:ring-2 focus:ring-[#4A9EDE] transition`}
+                required
+              />
+              {errors.cardNumber && <p className="text-red-500 text-xs mt-1">{errors.cardNumber}</p>}
+
+              <div className="flex gap-6 mb-6">
+                {/* Expiry */}
+                <div className="flex-1">
+                  <label htmlFor="expiry" className="block mb-1 font-semibold text-[#7AA7D9]">
+                    Expiry (MM/YY)
+                  </label>
+                  <input
+                    id="expiry"
+                    name="expiry"
+                    type="text"
+                    maxLength={5}
+                    placeholder="MM/YY"
+                    value={formData.expiry}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-2 rounded-lg bg-[#122A57] border ${
+                      errors.expiry ? "border-red-500" : "border-[#4A9EDE]"
+                    } text-white placeholder-[#5D7DB3] focus:outline-none focus:ring-2 focus:ring-[#4A9EDE] transition`}
+                    required
+                  />
+                  {errors.expiry && <p className="text-red-500 text-xs mt-1">{errors.expiry}</p>}
+                </div>
+
+                {/* CVV */}
+                <div className="flex-1">
+                  <label htmlFor="cvv" className="block mb-1 font-semibold text-[#7AA7D9]">
+                    CVV
+                  </label>
+                  <input
+                    id="cvv"
+                    name="cvv"
+                    type="password"
+                    maxLength={3}
+                    placeholder="123"
+                    value={formData.cvv}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-2 rounded-lg bg-[#122A57] border ${
+                      errors.cvv ? "border-red-500" : "border-[#4A9EDE]"
+                    } text-white placeholder-[#5D7DB3] focus:outline-none focus:ring-2 focus:ring-[#4A9EDE] transition`}
+                    required
+                  />
+                  {errors.cvv && <p className="text-red-500 text-xs mt-1">{errors.cvv}</p>}
+                </div>
               </div>
 
-              {/* CVV */}
-              <div className="flex-1">
-                <label htmlFor="cvv" className="block mb-1 font-semibold text-[#7AA7D9]">
-                  CVV
-                </label>
-                <input
-                  id="cvv"
-                  name="cvv"
-                  type="password"
-                  maxLength={3}
-                  placeholder="123"
-                  value={formData.cvv}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 rounded-md bg-[#122A57] border ${
-                    errors.cvv ? "border-red-500" : "border-[#2978B5]"
-                  } text-white placeholder-[#5D7DB3] focus:outline-none focus:ring-2 focus:ring-[#4A9EDE]`}
-                  required
-                />
-                {errors.cvv && <p className="text-red-500 text-xs mt-1">{errors.cvv}</p>}
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  className="px-6 py-2 rounded-full bg-[#4A9EDE] hover:bg-[#2978B5] font-semibold transition-colors"
+                  onClick={() => setPayingIndex(null)}
+                  disabled={isPaying}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPaying}
+                  className={`px-8 py-2 rounded-full font-semibold text-white ${
+                    isPaying ? "bg-blue-400 cursor-not-allowed" : "bg-[#2978B5] hover:bg-[#4A9EDE]"
+                  } transition-colors`}
+                >
+                  {isPaying ? "Processing..." : "Pay"}
+                </button>
               </div>
-            </div>
-
-            <div className="flex justify-end gap-4">
-              <button
-                type="button"
-                className="px-5 py-2 rounded-full bg-[#4A9EDE] hover:bg-[#2978B5] font-semibold transition-colors"
-                onClick={() => setPayingIndex(null)}
-                disabled={isPaying}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isPaying}
-                className={`px-6 py-2 rounded-full font-semibold text-white ${
-                  isPaying ? "bg-blue-400 cursor-not-allowed" : "bg-[#2978B5] hover:bg-[#4A9EDE]"
-                } transition-colors`}
-              >
-                {isPaying ? "Processing..." : "Pay"}
-              </button>
             </div>
           </form>
         </div>
