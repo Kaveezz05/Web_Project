@@ -1,39 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import { dummyShowsData } from '../../assets/assets';
-import Loading from '../../components/Loading';
+import React, { useState } from 'react';
 import Title from '../../components/admin/Title';
-import { CheckIcon, DeleteIcon, StarIcon } from 'lucide-react';
-import { kConverter } from '../../lib/kConverter';
+import { DeleteIcon } from 'lucide-react';
 import formatLKR from '../../lib/formatLKR';
 
 const AddShows = () => {
-  const [nowPlayingMovies, setNowPlayingMovies] = useState([]);
-  const [selectedMovies, setselectedMovies] = useState(null);
-  const [dateTimeSelection, setdateTimeSelection] = useState({});
-  const [dateTimeInput, setdateTimeInput] = useState("");
-  const [showPrice, setshowPrice] = useState("");
+  const [movieTitle, setMovieTitle] = useState('');
+  const [posterFile, setPosterFile] = useState(null);
+  const [posterPreview, setPosterPreview] = useState(null);
+  const [releaseDate, setReleaseDate] = useState('');
+  const [showPrice, setShowPrice] = useState('');
+  const [dateTimeInput, setDateTimeInput] = useState('');
+  const [dateTimeSelection, setDateTimeSelection] = useState({});
 
-  const fetchNowPlayingMovies = async () => {
-    setNowPlayingMovies(dummyShowsData);
+  // Handle poster file upload and show preview
+  const handlePosterChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPosterFile(file);
+      setPosterPreview(URL.createObjectURL(file));
+    }
   };
 
-  const handleDateTimeAd = () => {
+  const handleDateTimeAdd = () => {
     if (!dateTimeInput) return;
-    const [date, time] = dateTimeInput.split("T");
+    const [date, time] = dateTimeInput.split('T');
     if (!date || !time) return;
 
-    setdateTimeSelection((prev) => {
+    setDateTimeSelection(prev => {
       const existingTimes = prev[date] || [];
       if (!existingTimes.includes(time)) {
         return { ...prev, [date]: [...existingTimes, time] };
       }
       return prev;
     });
-    setdateTimeInput("");
+    setDateTimeInput('');
   };
 
   const handleRemoveTime = (prev, date, time) => {
-    const filteredTimes = prev[date].filter((t) => t !== time);
+    const filteredTimes = prev[date].filter(t => t !== time);
     if (filteredTimes.length === 0) {
       const { [date]: _, ...rest } = prev;
       return rest;
@@ -44,125 +48,170 @@ const AddShows = () => {
     };
   };
 
-  useEffect(() => {
-    fetchNowPlayingMovies();
-  }, []);
+  const handleAddShow = () => {
+    if (!movieTitle.trim() || !posterFile || !releaseDate || !showPrice || Object.keys(dateTimeSelection).length === 0) {
+      alert('Please fill in all fields and add at least one date & time.');
+      return;
+    }
 
-  return nowPlayingMovies.length > 0 ? (
+    const formData = new FormData();
+    formData.append('movieTitle', movieTitle.trim());
+    formData.append('poster', posterFile);
+    formData.append('releaseDate', releaseDate);
+    formData.append('showPrice', showPrice);
+    formData.append('dateTimeSelection', JSON.stringify(dateTimeSelection));
+
+    // Replace this URL with your backend endpoint
+    fetch('http://localhost/vistalite/addshows.php', {
+      method: 'POST',
+      body: formData,
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert('Show added successfully!');
+          // Reset form
+          setMovieTitle('');
+          setPosterFile(null);
+          setPosterPreview(null);
+          setReleaseDate('');
+          setShowPrice('');
+          setDateTimeSelection({});
+        } else {
+          alert('Failed to add show: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('An error occurred while adding the show.');
+      });
+  };
+
+  return (
     <>
       <Title text1="Add" text2="Shows" />
-      <p className='mt-10 text-lg font-medium'>Now Playing Movies</p>
+      
 
-      {/* Movie list */}
-      <div className='overflow-x-auto pb-4'>
-        <div className='group flex flex-wrap gap-4 mt-4 w-max'>
-          {nowPlayingMovies.map((movie) => (
-            <div
-              key={movie._id}
-              className={`relative max-w-40 cursor-pointer group-hover:not-hover:opacity-40 
-              hover:-translate-y-1 transition duration-300`}
-              onClick={() => setselectedMovies(movie._id)}
+      <div className="mt-10 max-w-2xl mx-auto grid gap-6">
+        {/* Movie Title */}
+        <div>
+          <label className="block text-sm font-medium mb-2">Movie Title</label>
+          <input
+            type="text"
+            value={movieTitle}
+            onChange={e => setMovieTitle(e.target.value)}
+            className="bg-black border border-gray-600 rounded-md px-3 py-2 w-full outline-none text-white"
+            placeholder="Enter movie title"
+          />
+        </div>
+
+        {/* Poster Upload */}
+        <div>
+          
+          <label className="block text-sm font-medium mb-2">Poster Image (Upload)</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handlePosterChange}
+            className="w-full text-gray-300"
+          />
+          {posterPreview && (
+            <img
+              src={posterPreview}
+              alt="Poster Preview"
+              className="mt-3 max-h-64 rounded shadow-md object-contain"
+            />
+          )}
+        </div>
+
+        {/* Release Date */}
+        <div>
+          <label className="block text-sm font-medium mb-2">Release Date</label>
+          <input
+            type="date"
+            value={releaseDate}
+            onChange={e => setReleaseDate(e.target.value)}
+            className="bg-black border border-gray-600 rounded-md px-3 py-2 w-full outline-none text-white"
+          />
+        </div>
+
+        {/* Show Price */}
+        <div>
+          <label className="block text-sm font-medium mb-2">Show Price</label>
+          <div className="inline-flex items-center gap-2 border border-gray-600 px-3 py-2 rounded-md">
+            <p className="text-gray-400 text-sm">{showPrice ? formatLKR(Number(showPrice)) : 'LKR'}</p>
+            <input
+              min={0}
+              type="number"
+              value={showPrice}
+              onChange={e => setShowPrice(e.target.value)}
+              placeholder="Enter show price"
+              className="outline-none bg-transparent w-32 text-white"
+            />
+          </div>
+        </div>
+
+        {/* Date & Time Selection */}
+        <div>
+          <label className="block text-sm font-medium mb-2">Select Date & Time</label>
+          <div className="inline-flex items-center gap-2 border border-gray-600 p-1 pl-3 rounded-lg">
+            <input
+              type="datetime-local"
+              value={dateTimeInput}
+              onChange={e => setDateTimeInput(e.target.value)}
+              className="outline-none rounded-md bg-black text-white"
+            />
+            <button
+              onClick={handleDateTimeAdd}
+              className="bg-[#2978B5]/80 text-white px-3 py-2 text-sm rounded-lg hover:bg-[#2978B5] cursor-pointer"
             >
-              <div className='relative rounded-lg overflow-hidden'>
-                <img src={movie.poster_path} alt='' className='w-full object-cover brightness-90' />
-                <div className='text-sm flex items-center justify-between p-2 bg-black/70 w-full absolute bottom-0 left-0'>
-                  <p className='flex items-center gap-1 text-gray-400'>
-                    <StarIcon className='w-4 h-4 text-[#2978B5] fill-[#2978B5]' />
-                    {movie.vote_average.toFixed(1)}
-                  </p>
-                  <p className='text-gray-300'>{kConverter(movie.vote_count)} Votes</p>
-                </div>
-              </div>
-
-              {selectedMovies === movie._id && (
-                <div className='absolute top-2 right-2 flex items-center justify-center bg-[#2978B5] h-6 w-6 rounded'>
-                  <CheckIcon className='w-4 h-4 text-white' strokeWidth={2.5} />
-                </div>
-              )}
-
-              <p className='font-medium truncate'>{movie.title}</p>
-              <p className='text-gray-400 text-sm'>{movie.release_date}</p>
-            </div>
-          ))}
+              Add Time
+            </button>
+          </div>
         </div>
+
+        {/* Display Selected Date & Times */}
+        {Object.keys(dateTimeSelection).length > 0 && (
+          <div>
+            <h2 className="mb-2 text-lg font-semibold text-white">Selected Date-Time</h2>
+            <ul className="space-y-3 text-white">
+              {Object.entries(dateTimeSelection).map(([date, times]) => (
+                <li key={date}>
+                  <div className="font-medium">{date}</div>
+                  <div className="flex flex-wrap gap-2 mt-1 text-sm">
+                    {times.map(time => (
+                      <div
+                        key={time}
+                        className="border border-[#2978B5] px-2 py-1 flex items-center rounded"
+                      >
+                        <span>{time}</span>
+                        <DeleteIcon
+                          onClick={() =>
+                            setDateTimeSelection(prev =>
+                              handleRemoveTime(prev, date, time)
+                            )
+                          }
+                          width={15}
+                          className="ml-2 text-red-500 hover:text-red-700 cursor-pointer"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Submit Button */}
+        <button
+          onClick={handleAddShow}
+          className="bg-[#2978B5] text-white px-8 py-2 rounded hover:bg-[#2978B5]/90 transition-all cursor-pointer"
+        >
+          Add Show
+        </button>
       </div>
-
-      {/* Show Price Input */}
-      <div className='mt-6'>
-        <label className='block text-sm font-medium mb-2'>Show Price</label>
-        <div className='inline-flex items-center gap-2 border border-gray-600 px-3 py-2 rounded-md'>
-          <p className='text-gray-400 text-sm'>
-            {showPrice ? formatLKR(Number(showPrice)) : 'LKR'}
-          </p>
-          <input
-            min={0}
-            type='number'
-            value={showPrice}
-            onChange={(e) => setshowPrice(e.target.value)}
-            placeholder='Enter show price'
-            className='outline-none bg-transparent w-32'
-          />
-        </div>
-      </div>
-
-      {/* Date-Time Selection */}
-      <div className='mt-6'>
-        <label className='block text-sm font-medium mb-2'>Select Date & Time</label>
-        <div className='inline-flex items-center gap-2 border border-gray-600 p-1 pl-3 rounded-lg'>
-          <input
-            type='datetime-local'
-            value={dateTimeInput}
-            onChange={(e) => setdateTimeInput(e.target.value)}
-            className='outline-none rounded-md'
-          />
-          <button
-            onClick={handleDateTimeAd}
-            className='bg-[#2978B5]/80 text-white px-3 py-2 text-sm rounded-lg hover:bg-[#2978B5] cursor-pointer'
-          >
-            Add Time
-          </button>
-        </div>
-      </div>
-
-      {/* Display Selected Times */}
-      {Object.keys(dateTimeSelection).length > 0 && (
-        <div className='mt-6'>
-          <h2 className='mb-2'>Selected Date-Time</h2>
-          <ul className='space-y-3'>
-            {Object.entries(dateTimeSelection).map(([date, times]) => (
-              <li key={date}>
-                <div className='font-medium'>{date}</div>
-                <div className='flex flex-wrap gap-2 mt-1 text-sm'>
-                  {times.map((time) => (
-                    <div
-                      key={time}
-                      className='border border-[#2978B5] px-2 py-1 flex items-center rounded'
-                    >
-                      <span>{time}</span>
-                      <DeleteIcon
-                        onClick={() =>
-                          setdateTimeSelection((prev) =>
-                            handleRemoveTime(prev, date, time)
-                          )
-                        }
-                        width={15}
-                        className='ml-2 text-red-500 hover:text-red-700 cursor-pointer'
-                      />
-                    </div>
-                  ))}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      <button className='bg-[#2978B5] text-white px-8 py-2 mt-6 rounded hover:bg-[#2978B5]/90 transition-all cursor-pointer'>
-      Add Show
-
-      </button>
     </>
-  ) : (
-    <Loading />
   );
 };
 

@@ -28,6 +28,10 @@ const Login = () => {
   const [regUsername, setRegUsername] = useState("");
   const [regPassword, setRegPassword] = useState("");
 
+  // New states for logout password prompt and error message
+  const [logoutPassword, setLogoutPassword] = useState("");
+  const [logoutError, setLogoutError] = useState("");
+
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -64,7 +68,13 @@ const Login = () => {
       setLoginUsername("");
       setLoginPassword("");
       setLoading(false);
-      navigate("/");
+
+      // Redirect based on username
+      if (loginUsername.trim().toLowerCase() === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       console.error("Login error:", error);
       alert("Network error. Make sure XAMPP is running and login.php is accessible.");
@@ -114,10 +124,38 @@ const Login = () => {
     }
   };
 
-  const confirmLogout = () => {
-    setIsAuthenticated(false);
-    setShowLogoutPrompt(false);
-    navigate("/");
+  // Logout confirmation with password verification
+  const handleLogoutClick = async () => {
+    if (!logoutPassword.trim()) {
+      setLogoutError("Please enter your password.");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost/vistalite/logout.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: loginUsername,
+          password: logoutPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        setLogoutError(data.error || "Incorrect password.");
+      } else {
+        setIsAuthenticated(false);
+        setShowLogoutPrompt(false);
+        setLogoutPassword("");
+        setLogoutError("");
+        navigate("/");
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
+      setLogoutError("Server error. Try again.");
+    }
   };
 
   return (
@@ -271,16 +309,31 @@ const Login = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm min-h-screen">
           <div className="w-full max-w-md bg-black/80 border border-[#303D5A] rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">
             <h2 className="text-2xl mb-6 font-semibold">Confirm Logout</h2>
-            <p className="mb-4">Are you sure you want to logout?</p>
+            <p className="mb-4">Please enter your password to logout:</p>
+            <InputWithIcon
+              icon={FaLock}
+              type="password"
+              value={logoutPassword}
+              onChange={(e) => setLogoutPassword(e.target.value)}
+              placeholder="Password"
+              autoFocus
+            />
+            {logoutError && (
+              <p className="text-red-500 mb-4 text-sm font-semibold">{logoutError}</p>
+            )}
             <div className="flex justify-end gap-4">
               <button
-                onClick={() => setShowLogoutPrompt(false)}
+                onClick={() => {
+                  setShowLogoutPrompt(false);
+                  setLogoutPassword("");
+                  setLogoutError("");
+                }}
                 className="px-4 py-2 rounded bg-[#303D5A] hover:bg-[#4A9EDE] transition"
               >
                 Cancel
               </button>
               <button
-                onClick={confirmLogout}
+                onClick={handleLogoutClick}
                 className="px-4 py-2 rounded bg-[#2978B5] hover:bg-[#4A9EDE] transition"
               >
                 Logout
@@ -293,4 +346,4 @@ const Login = () => {
   );
 };
 
-export default Login; 
+export default Login;

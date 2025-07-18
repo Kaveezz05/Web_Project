@@ -36,6 +36,8 @@ const App = () => {
         <Route path="add-shows" element={<AddShows/>}/>
         <Route path="list-shows" element={<ListShows/>}/>
         <Route path="list-bookings" element={<ListBookings/>}/>
+        <Route path="admin-dashboard" element={<Dashboard />} />
+
 
 
         </Route>
