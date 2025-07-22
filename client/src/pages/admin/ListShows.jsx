@@ -3,20 +3,16 @@ import formatLKR from '../../lib/formatLKR';
 import Loading from '../../components/Loading';
 import Title from '../../components/admin/Title';
 import { dateFormat } from '../../lib/dateFormat';
+import BlurCircle from '../../components/BlurCircle';
 
 const ListShows = () => {
   const [shows, setShows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const currency = "LKR";
 
   const getAllShows = async () => {
     try {
-      // TODO: Replace this with actual API call, e.g.:
-      // const res = await fetch('http://localhost/vistalite/listshows.php');
-      // const data = await res.json();
-      // setShows(data.shows);
-
-      setShows([]); // empty for now, no dummy data
+      // Replace this with actual API call
+      setShows([]); // No dummy data yet
       setLoading(false);
     } catch (error) {
       console.error(error);
@@ -33,37 +29,43 @@ const ListShows = () => {
   return (
     <>
       <Title text1="List" text2="Shows" />
-      <div className="max-w-4xl mt-6 overflow-x-auto">
+
+      <div className="relative mt-8 px-6 md:px-12 lg:px-20 text-[#E5E9F0]">
+        <BlurCircle top="100px" left="0" />
+        <BlurCircle bottom="0" right="0" />
+
         {shows.length === 0 ? (
-          <p className="text-white text-center py-10">No shows available.</p>
+          <p className="text-center text-gray-400 py-10 text-sm">No shows available.</p>
         ) : (
-          <table className="w-full border-collapse rounded-md overflow-hidden whitespace-nowrap">
-            <thead>
-              <tr className="bg-[#2978B5]/20 text-white text-left">
-                <th className="p-2 pl-5 font-medium">Movie Name</th>
-                <th className="p-2 pl-5 font-medium">Show Time</th>
-                <th className="p-2 pl-5 font-medium">Total Bookings</th>
-                <th className="p-2 pl-5 font-medium">Earnings</th>
-              </tr>
-            </thead>
-            <tbody className="text-sm font-light">
-              {shows.map((show, index) => (
-                <tr
-                  key={index}
-                  className="border-b border-[#2978B5]/10 bg-[#2978B5]/5 even:bg-[#2978B5]/10"
-                >
-                  <td className="p-2 min-4-w-45 pl-5">{show.movie.title}</td>
-                  <td className="p-2">{dateFormat(show.showDateTime)}</td>
-                  <td className="p-2">{Object.keys(show.occupiedSeats).length}</td>
-                  <td className="p-2">
-                    {formatLKR(
-                      Object.keys(show.occupiedSeats).length * show.showPrice
-                    )}
-                  </td>
+          <div className="overflow-x-auto rounded-xl backdrop-blur-md border border-[#4A9EDE]/20 shadow-xl">
+            <table className="min-w-full table-auto text-sm bg-[#1C1F2E]/60">
+              <thead>
+                <tr className="text-left bg-[#2978B5]/20 text-white">
+                  <th className="py-4 px-6 font-medium">Movie Name</th>
+                  <th className="py-4 px-6 font-medium">Show Time</th>
+                  <th className="py-4 px-6 font-medium">Total Bookings</th>
+                  <th className="py-4 px-6 font-medium">Earnings</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {shows.map((show, index) => (
+                  <tr
+                    key={index}
+                    className={`${
+                      index % 2 === 0 ? 'bg-[#4A9EDE]/5' : 'bg-[#4A9EDE]/10'
+                    } border-b border-[#4A9EDE]/10 hover:bg-[#2978B5]/10 transition`}
+                  >
+                    <td className="px-6 py-4">{show.movie.title}</td>
+                    <td className="px-6 py-4">{dateFormat(show.showDateTime)}</td>
+                    <td className="px-6 py-4">{Object.keys(show.occupiedSeats).length}</td>
+                    <td className="px-6 py-4 font-medium text-[#4A9EDE]">
+                      {formatLKR(Object.keys(show.occupiedSeats).length * show.showPrice)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </>

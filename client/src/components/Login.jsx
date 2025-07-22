@@ -1,5 +1,5 @@
 import React, { useState, memo } from "react";
-import { FaUser, FaLock, FaCog } from "react-icons/fa";
+import { FaUser, FaLock } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 
@@ -17,9 +17,9 @@ const Login = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [action, setAction] = useState("login");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
-  const [showLogoutPrompt, setShowLogoutPrompt] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
 
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -27,10 +27,6 @@ const Login = () => {
   const [regEmail, setRegEmail] = useState("");
   const [regUsername, setRegUsername] = useState("");
   const [regPassword, setRegPassword] = useState("");
-
-  // New states for logout password prompt and error message
-  const [logoutPassword, setLogoutPassword] = useState("");
-  const [logoutError, setLogoutError] = useState("");
 
   const navigate = useNavigate();
 
@@ -62,14 +58,16 @@ const Login = () => {
         return;
       }
 
-      alert("Login successful");
       setIsAuthenticated(true);
       setShowLogin(false);
-      setLoginUsername("");
-      setLoginPassword("");
       setLoading(false);
+      setLoginUsername(loginUsername.trim());
 
-      // Redirect based on username
+      // Flash welcome popup
+      setShowWelcomePopup(true);
+      setTimeout(() => setShowWelcomePopup(false), 3000);
+
+      // Navigate
       if (loginUsername.trim().toLowerCase() === "admin") {
         navigate("/admin");
       } else {
@@ -124,38 +122,11 @@ const Login = () => {
     }
   };
 
-  // Logout confirmation with password verification
-  const handleLogoutClick = async () => {
-    if (!logoutPassword.trim()) {
-      setLogoutError("Please enter your password.");
-      return;
-    }
-
-    try {
-      const res = await fetch("http://localhost/vistalite/logout.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: loginUsername,
-          password: logoutPassword,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        setLogoutError(data.error || "Incorrect password.");
-      } else {
-        setIsAuthenticated(false);
-        setShowLogoutPrompt(false);
-        setLogoutPassword("");
-        setLogoutError("");
-        navigate("/");
-      }
-    } catch (err) {
-      console.error("Logout error:", err);
-      setLogoutError("Server error. Try again.");
-    }
+  const confirmLogout = () => {
+    setIsAuthenticated(false);
+    setShowLogoutConfirm(false);
+    setLoginUsername("");
+    navigate("/");
   };
 
   return (
@@ -163,33 +134,26 @@ const Login = () => {
       {!isAuthenticated ? (
         <button
           onClick={() => setShowLogin(true)}
-          className="px-5 py-2 bg-[#2978B5] hover:bg-[#4A9EDE] transition rounded-full font-semibold text-[#E5E9F0]"
+          className="px-5 py-2 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] transition rounded-full font-semibold text-black"
         >
           Login
         </button>
       ) : (
-        <div className="relative inline-block">
-          <FaCog
-            className="text-[#E5E9F0] w-6 h-6 cursor-pointer hover:text-[#2978B5]"
-            onClick={() => setShowSettingsDropdown((prev) => !prev)}
-            title="Settings"
-          />
-          {showSettingsDropdown && (
-            <div className="absolute right-0 mt-2 w-28 bg-black/80 backdrop-blur-md rounded-lg shadow-lg z-50 p-2 text-[#E5E9F0] border border-[#303D5A]">
-              <button
-                onClick={() => {
-                  setShowSettingsDropdown(false);
-                  setShowLogoutPrompt(true);
-                }}
-                className="block w-full text-left px-4 py-2 hover:bg-[#2978B5] rounded transition"
-              >
-                Logout
-              </button>
-            </div>
-          )}
+        <div className="relative inline-flex items-center space-x-3">
+          <div className="flex items-center space-x-2 bg-black/80 border border-[#303D5A] rounded-full px-3 py-1 cursor-default select-none text-[#E5E9F0] text-sm font-semibold">
+            <FaUser className="w-5 h-5 text-[#2978B5]" />
+            <span>{loginUsername}</span>
+          </div>
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="px-5 py-2 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] transition rounded-full font-semibold text-black"
+          >
+            Logout
+          </button>
         </div>
       )}
 
+      {/* Login Modal */}
       {showLogin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm min-h-screen">
           <div className="relative w-full max-w-md bg-black/80 border border-[#303D5A] rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">
@@ -202,8 +166,8 @@ const Login = () => {
               &times;
             </button>
 
-            <h1 className="text-5xl font-extrabold mb-8 tracking-wide">
-              <span className="text-[#2978B5]">V</span>istaLite
+            <h1 className="text-5xl font-extrabold mb-8 tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA]">
+              Vistalite
             </h1>
 
             <form
@@ -234,7 +198,7 @@ const Login = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 bg-[#2978B5] hover:bg-[#4A9EDE] transition rounded-full font-semibold disabled:opacity-50"
+                    className="w-full py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] transition rounded-full font-semibold disabled:opacity-50 text-black"
                   >
                     {loading ? "Signing In..." : "Sign In"}
                   </button>
@@ -283,7 +247,7 @@ const Login = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 bg-[#2978B5] hover:bg-[#4A9EDE] transition rounded-full font-semibold disabled:opacity-50"
+                    className="w-full py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] transition rounded-full font-semibold disabled:opacity-50 text-black"
                   >
                     {loading ? "Signing Up..." : "Sign Up"}
                   </button>
@@ -305,43 +269,44 @@ const Login = () => {
         </div>
       )}
 
-      {showLogoutPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm min-h-screen">
-          <div className="w-full max-w-md bg-black/80 border border-[#303D5A] rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">
-            <h2 className="text-2xl mb-6 font-semibold">Confirm Logout</h2>
-            <p className="mb-4">Please enter your password to logout:</p>
-            <InputWithIcon
-              icon={FaLock}
-              type="password"
-              value={logoutPassword}
-              onChange={(e) => setLogoutPassword(e.target.value)}
-              placeholder="Password"
-              autoFocus
-            />
-            {logoutError && (
-              <p className="text-red-500 mb-4 text-sm font-semibold">{logoutError}</p>
-            )}
-            <div className="flex justify-end gap-4">
-              <button
-                onClick={() => {
-                  setShowLogoutPrompt(false);
-                  setLogoutPassword("");
-                  setLogoutError("");
-                }}
-                className="px-4 py-2 rounded bg-[#303D5A] hover:bg-[#4A9EDE] transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleLogoutClick}
-                className="px-4 py-2 rounded bg-[#2978B5] hover:bg-[#4A9EDE] transition"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Logout Confirm */}
+      {/* Logout Confirm */}
+{showLogoutConfirm && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm min-h-screen">
+    <div className="w-full max-w-md bg-[#1C1F2E]/90 border border-[#4A9EDE]/30 rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">
+      <h2 className="text-2xl mb-4 font-bold text-white">Confirm Logout</h2>
+      <p className="text-sm text-[#A3AED0] mb-6">
+        Are you sure you want to logout?
+      </p>
+      <div className="flex justify-end gap-4">
+        <button
+          onClick={() => setShowLogoutConfirm(false)}
+          className="px-5 py-2 rounded-full bg-[#303D5A] hover:bg-[#4A9EDE]/90 transition text-white font-medium"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={confirmLogout}
+          className="px-6 py-2 rounded-full bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black font-semibold shadow-md hover:opacity-90 transition"
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+      {/* Flash Welcome Message */}
+ {showWelcomePopup && (
+  <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+    <div className="bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black px-6 py-2 rounded-full shadow-lg text-sm font-medium animate-drop-fade">
+      👋 Welcome, {loginUsername}!
+    </div>
+  </div>
+)}
+
+
     </>
   );
 };
