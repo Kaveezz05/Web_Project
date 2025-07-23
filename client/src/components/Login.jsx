@@ -63,16 +63,20 @@ const Login = () => {
       setLoading(false);
       setLoginUsername(loginUsername.trim());
 
-      // Flash welcome popup
+      // Show welcome message
       setShowWelcomePopup(true);
       setTimeout(() => setShowWelcomePopup(false), 3000);
 
-      // Navigate
-      if (loginUsername.trim().toLowerCase() === "admin") {
+      // Navigate by role
+      const username = loginUsername.trim().toLowerCase();
+      if (username === "admin") {
         navigate("/admin");
+      } else if (username === "cashier") {
+        navigate("/cashier");
       } else {
         navigate("/");
       }
+
     } catch (error) {
       console.error("Login error:", error);
       alert("Network error. Make sure XAMPP is running and login.php is accessible.");
@@ -270,43 +274,37 @@ const Login = () => {
       )}
 
       {/* Logout Confirm */}
-      {/* Logout Confirm */}
-{showLogoutConfirm && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm min-h-screen">
-    <div className="w-full max-w-md bg-[#1C1F2E]/90 border border-[#4A9EDE]/30 rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">
-      <h2 className="text-2xl mb-4 font-bold text-white">Confirm Logout</h2>
-      <p className="text-sm text-[#A3AED0] mb-6">
-        Are you sure you want to logout?
-      </p>
-      <div className="flex justify-end gap-4">
-        <button
-          onClick={() => setShowLogoutConfirm(false)}
-          className="px-5 py-2 rounded-full bg-[#303D5A] hover:bg-[#4A9EDE]/90 transition text-white font-medium"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={confirmLogout}
-          className="px-6 py-2 rounded-full bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black font-semibold shadow-md hover:opacity-90 transition"
-        >
-          Confirm
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#1C1F2E] border border-[#4A90E2]/30 p-8 rounded-xl shadow-xl text-white max-w-sm w-full">
+            <h2 className="text-xl font-bold mb-4">Confirm Logout</h2>
+            <p className="text-sm text-[#A3AED0] mb-6">Are you sure you want to logout?</p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-4 py-2 rounded-full bg-[#303D5A] hover:bg-[#4A9EDE] text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="px-6 py-2 rounded-full bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black font-semibold shadow-md"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Flash Welcome Message */}
- {showWelcomePopup && (
-  <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-    <div className="bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black px-6 py-2 rounded-full shadow-lg text-sm font-medium animate-drop-fade">
-      👋 Welcome, {loginUsername}!
-    </div>
-  </div>
-)}
-
-
+      {showWelcomePopup && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <div className="bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black px-6 py-2 rounded-full shadow-lg text-sm font-medium animate-drop-fade">
+            👋 Welcome, {loginUsername}!
+          </div>
+        </div>
+      )}
     </>
   );
 };
