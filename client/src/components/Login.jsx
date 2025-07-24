@@ -274,28 +274,29 @@ const Login = () => {
       )}
 
       {/* Logout Confirm */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#1C1F2E] border border-[#4A90E2]/30 p-8 rounded-xl shadow-xl text-white max-w-sm w-full">
-            <h2 className="text-xl font-bold mb-4">Confirm Logout</h2>
-            <p className="text-sm text-[#A3AED0] mb-6">Are you sure you want to logout?</p>
-            <div className="flex justify-end gap-4">
-              <button
-                onClick={() => setShowLogoutConfirm(false)}
-                className="px-4 py-2 rounded-full bg-[#303D5A] hover:bg-[#4A9EDE] text-white"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmLogout}
-                className="px-6 py-2 rounded-full bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black font-semibold shadow-md"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+    {showLogoutConfirm && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center min-h-screen bg-black/80 backdrop-blur-sm">
+    <div className="bg-[#1C1F2E] border border-[#4A90E2]/30 p-8 rounded-xl shadow-xl text-white max-w-sm w-full">
+      <h2 className="text-xl font-bold mb-4">Confirm Logout</h2>
+      <p className="text-sm text-[#A3AED0] mb-6">Are you sure you want to logout?</p>
+      <div className="flex justify-end gap-4">
+        <button
+          onClick={() => setShowLogoutConfirm(false)}
+          className="px-4 py-2 rounded-full bg-[#303D5A] hover:bg-[#4A9EDE] text-white"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={confirmLogout}
+          className="px-6 py-2 rounded-full bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black font-semibold shadow-md"
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* Flash Welcome Message */}
       {showWelcomePopup && (

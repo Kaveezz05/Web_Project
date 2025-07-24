@@ -69,6 +69,7 @@ const CashierDashboard = () => {
 
         {/* Dashboard Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 w-full">
+         <BlurCircle top="0" left="50%" />
           {dashboardCards.map((card, index) => (
             <div
               key={index}

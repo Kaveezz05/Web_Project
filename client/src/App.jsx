@@ -20,9 +20,11 @@ import ListShows from './pages/admin/ListShows';
 // Cashier
 import CashierLayout from './pages/cashier/CashierLayout';
 import CashierDashboard from './pages/cashier/CashierDashboard';
-import BookingCard from './pages/cashier/BookingCard';
-import BookingList from './pages/cashier/BookingList';
-import FilterBar from './pages/cashier/Filterbar';
+import CashierBookings from './pages/cashier/CashierBookings';
+import CashierDate from './pages/cashier/CashierDate';
+
+
+
 
 const App = () => {
   const location = useLocation();
@@ -55,9 +57,9 @@ const App = () => {
         {/* Cashier routes */}
         <Route path="/cashier/*" element={<CashierLayout />}>
           <Route index element={<CashierDashboard />} />
-          <Route path="booking-card" element={<BookingCard />} />
-          <Route path="booking-list" element={<BookingList />} />
-          <Route path="filter-bar" element={<FilterBar />} />
+          <Route index element={<CashierDashboard />} />
+          <Route path="bookings" element={<CashierBookings/>} />
+           <Route path="filter" element={<CashierDate />} />
         </Route>
       </Routes>
 

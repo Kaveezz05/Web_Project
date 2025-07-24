@@ -32,7 +32,7 @@ const CashierNavbar = () => {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-[#1C1F2E]/90 border border-[#4A9EDE]/20 px-8 py-6 rounded-xl text-center shadow-xl max-w-sm w-full">
             <h2 className="text-xl font-bold mb-4 text-white">Confirm Logout</h2>
-            <p className="text-sm text-[#A3AED0] mb-6">Are you sure you want to log out of the admin panel?</p>
+            <p className="text-sm text-[#A3AED0] mb-6">Are you sure you want to log out?</p>
             <div className="flex justify-end gap-4">
               <button
                 onClick={() => setShowConfirm(false)}
