@@ -1,15 +1,10 @@
 import React, { useState } from 'react';
 import { DeleteIcon } from 'lucide-react';
 import BlurCircle from '../../components/BlurCircle';
-import Title from '../../components/admin/Title'; // ✅ Import fixed
-import formatLKR from '../../lib/formatLKR';
+import Title from '../../components/admin/Title';
 
-const genreOptions = [
-  'Action', 'Adventure', 'Animation', 'Comedy', 'Crime',
-  'Drama', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller'
-];
-
-const languageOptions = ['en', 'hi', 'te', 'ta', 'fr', 'es', 'ja', 'ko'];
+const genreOptions = ['Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Drama', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller'];
+const languageOptions = ['en', 'hi', 'ta', 'te', 'ko', 'ja'];
 
 const AddShows = () => {
   const [formData, setFormData] = useState({
@@ -35,10 +30,10 @@ const AddShows = () => {
 
   const handleGenreToggle = (genre) => {
     setFormData((prev) => {
-      const updated = prev.genres.includes(genre)
+      const genres = prev.genres.includes(genre)
         ? prev.genres.filter((g) => g !== genre)
         : [...prev.genres, genre];
-      return { ...prev, genres: updated };
+      return { ...prev, genres };
     });
   };
 
@@ -73,214 +68,127 @@ const AddShows = () => {
     return { ...prev, [date]: updated };
   };
 
-  const handleSubmit = () => {
-    const movieData = {
-      ...formData,
-      genres: formData.genres.map((g) => ({ name: g })),
-      showDateTime: dateTimeSelection,
-    };
-    console.log('🎬 Movie Data:', movieData);
-    alert('Movie and show details captured. Backend submission coming next.');
+  const handleSubmit = async () => {
+    if (!formData.title.trim()) {
+      alert('Please enter the movie title.');
+      return;
+    }
+
+    if (!posterFile) {
+      alert('Please select a poster image.');
+      return;
+    }
+
+    const form = new FormData();
+    form.append('title', formData.title);
+    form.append('tagline', formData.tagline);
+    form.append('genres', JSON.stringify(formData.genres));
+    form.append('language', formData.language);
+    form.append('runtime', formData.runtime);
+    form.append('release_date', formData.releaseDate);
+    form.append('overview', formData.overview);
+    form.append('price', formData.price);
+    form.append('poster', posterFile);
+    form.append('showDateTime', JSON.stringify(dateTimeSelection));
+
+    try {
+      await fetch('http://localhost/vistalite/addshows.php', {
+        method: 'POST',
+        body: form,
+      });
+
+      alert(`✅ Movie "${formData.title}" was successfully added!`);
+      window.location.reload();
+    } catch (err) {
+      alert('❌ Something went wrong. Please try again.');
+    }
   };
 
   return (
     <>
-      <Title text1="Add" text2="Shows" /> {/* ✅ Corrected Title */}
+      <Title text1="Add" text2="Shows" />
       <div className="relative min-h-screen px-6 md:px-12 py-20 bg-gradient-to-b from-black via-[#0F1A32] to-black text-[#E5E9F0]">
         <BlurCircle top="50px" left="-100px" />
         <BlurCircle bottom="0" right="-100px" />
 
         <div className="bg-[#1C1F2E]/60 border border-[#4A9EDE]/20 backdrop-blur-md rounded-xl shadow-xl p-8 max-w-3xl mx-auto space-y-8">
 
-          {/* Movie Title */}
-          <div>
-            <label className="block text-sm mb-1 text-[#A3AED0]">Title</label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              placeholder="Movie title"
-              className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white placeholder-[#9CA3AF] focus:ring-2 focus:ring-[#4A90E2] outline-none"
-            />
-          </div>
+          <input type="text" name="title" value={formData.title} onChange={handleInputChange}
+            placeholder="Movie Title" className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white" />
 
-          {/* Tagline */}
-          <div>
-            <label className="block text-sm mb-1 text-[#A3AED0]">Tagline</label>
-            <input
-              type="text"
-              name="tagline"
-              value={formData.tagline}
-              onChange={handleInputChange}
-              placeholder="Movie tagline"
-              className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white"
-            />
-          </div>
+          <input type="text" name="tagline" value={formData.tagline} onChange={handleInputChange}
+            placeholder="Tagline" className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white" />
 
-          {/* Genres */}
-          <div>
-            <label className="block text-sm mb-1 text-[#A3AED0]">Genres</label>
-            <div className="flex flex-wrap gap-2">
-              {genreOptions.map((genre) => (
-                <button
-                  key={genre}
-                  type="button"
-                  onClick={() => handleGenreToggle(genre)}
-                  className={`px-3 py-1 rounded-full border ${
-                    formData.genres.includes(genre)
-                      ? 'bg-[#4A90E2]/80 border-[#4A90E2] text-white'
-                      : 'bg-black/50 border-[#4A9EDE] text-[#A3AED0]'
-                  } text-sm hover:opacity-80 transition`}
-                >
-                  {genre}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Language */}
-          <div>
-            <label className="block text-sm mb-1 text-[#A3AED0]">Language</label>
-            <select
-              name="language"
-              value={formData.language}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white"
-            >
-              {languageOptions.map((lang) => (
-                <option key={lang} value={lang}>
-                  {lang.toUpperCase()}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Runtime */}
-          <div>
-            <label className="block text-sm mb-1 text-[#A3AED0]">Runtime (in minutes)</label>
-            <input
-              type="number"
-              name="runtime"
-              value={formData.runtime}
-              onChange={handleInputChange}
-              placeholder="e.g. 102"
-              className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white"
-            />
-          </div>
-
-          {/* Release Date */}
-          <div>
-            <label className="block text-sm mb-1 text-[#A3AED0]">Release Date</label>
-            <input
-              type="date"
-              name="releaseDate"
-              value={formData.releaseDate}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white"
-            />
-          </div>
-
-          {/* Overview */}
-          <div>
-            <label className="block text-sm mb-1 text-[#A3AED0]">Overview</label>
-            <textarea
-              name="overview"
-              value={formData.overview}
-              onChange={handleInputChange}
-              rows={4}
-              placeholder="Movie description"
-              className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white resize-none"
-            />
-          </div>
-
-          {/* Poster Upload */}
-          <div>
-            <label className="block text-sm mb-1 text-[#A3AED0]">Poster</label>
-            <input type="file" accept="image/*" onChange={handlePosterChange} />
-            {posterPreview && (
-              <img
-                src={posterPreview}
-                alt="Preview"
-                className="mt-4 max-h-64 rounded-lg shadow-md object-contain border border-[#4A90E2]/40"
-              />
-            )}
-          </div>
-
-          {/* Price */}
-          <div>
-            <label className="block text-sm mb-1 text-[#A3AED0]">Show Price</label>
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/50 border border-[#4A9EDE]">
-              <p className="text-sm text-gray-400">{formData.price ? formatLKR(Number(formData.price)) : 'LKR'}</p>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                className="bg-transparent w-full text-white outline-none placeholder-[#9CA3AF]"
-                placeholder="Enter price"
-              />
-            </div>
-          </div>
-
-          {/* DateTime Selection */}
-          <div>
-            <label className="block text-sm mb-1 text-[#A3AED0]">Add Show Date & Time</label>
-            <div className="flex gap-4">
-              <input
-                type="datetime-local"
-                value={dateTimeInput}
-                onChange={(e) => setDateTimeInput(e.target.value)}
-                className="px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white"
-              />
-              <button
-                onClick={handleDateTimeAdd}
-                className="px-4 py-2 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black font-semibold rounded-full shadow-md hover:opacity-90 transition"
-              >
-                Add Time
+          <div className="flex flex-wrap gap-2">
+            {genreOptions.map((genre) => (
+              <button key={genre} type="button" onClick={() => handleGenreToggle(genre)}
+                className={`px-3 py-1 rounded-full border text-sm transition ${
+                  formData.genres.includes(genre)
+                    ? 'bg-[#4A90E2]/80 border-[#4A90E2] text-white'
+                    : 'bg-black/50 border-[#4A9EDE] text-[#A3AED0]'
+                }`}>
+                {genre}
               </button>
-            </div>
+            ))}
           </div>
 
-          {/* DateTime List */}
+          <select name="language" value={formData.language} onChange={handleInputChange}
+            className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white">
+            {languageOptions.map((lang) => (
+              <option key={lang} value={lang}>{lang.toUpperCase()}</option>
+            ))}
+          </select>
+
+          <input type="number" name="runtime" value={formData.runtime} onChange={handleInputChange}
+            placeholder="Runtime in minutes" className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white" />
+
+          <input type="date" name="releaseDate" value={formData.releaseDate} onChange={handleInputChange}
+            className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white" />
+
+          <textarea name="overview" value={formData.overview} onChange={handleInputChange}
+            placeholder="Movie Overview" rows="4"
+            className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white resize-none" />
+
+          <input type="file" accept="image/*" onChange={handlePosterChange} />
+          {posterPreview && (
+            <img src={posterPreview} alt="Preview"
+              className="mt-4 max-h-64 rounded-lg shadow-md object-contain border border-[#4A90E2]/40" />
+          )}
+
+          <input type="number" name="price" value={formData.price} onChange={handleInputChange}
+            placeholder="Ticket Price (LKR)" className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white" />
+
+          <div className="flex items-center gap-4">
+            <input type="datetime-local" value={dateTimeInput} onChange={(e) => setDateTimeInput(e.target.value)}
+              className="px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white" />
+            <button onClick={handleDateTimeAdd}
+              className="px-4 py-2 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black font-semibold rounded-full shadow-md hover:opacity-90 transition">
+              Add Time
+            </button>
+          </div>
+
           {Object.keys(dateTimeSelection).length > 0 && (
-            <div>
-              <h2 className="text-lg font-semibold mb-2">Selected Show Times</h2>
-              <ul className="space-y-3">
-                {Object.entries(dateTimeSelection).map(([date, times]) => (
-                  <li key={date}>
-                    <div className="font-medium text-[#9CA3AF]">{date}</div>
-                    <div className="flex flex-wrap gap-2 mt-1 text-sm">
-                      {times.map((time) => (
-                        <div
-                          key={time}
-                          className="flex items-center px-3 py-1 rounded-full border border-[#4A90E2] text-white bg-black/40"
-                        >
-                          {time}
-                          <DeleteIcon
-                            width={16}
-                            className="ml-2 text-red-500 hover:text-red-700 cursor-pointer"
-                            onClick={() =>
-                              setDateTimeSelection((prev) =>
-                                handleRemoveTime(prev, date, time)
-                              )
-                            }
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+            <div className="space-y-4">
+              {Object.entries(dateTimeSelection).map(([date, times]) => (
+                <div key={date}>
+                  <p className="font-semibold text-[#A3AED0]">{date}</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {times.map((time) => (
+                      <div key={time} className="flex items-center px-3 py-1 rounded-full border border-[#4A90E2] text-white bg-black/40">
+                        {time}
+                        <DeleteIcon width={16} className="ml-2 text-red-500 hover:text-red-700 cursor-pointer"
+                          onClick={() => setDateTimeSelection((prev) => handleRemoveTime(prev, date, time))} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Submit */}
-          <div className="text-right pt-4">
-            <button
-              onClick={handleSubmit}
-              className="px-8 py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black font-semibold rounded-full shadow-md hover:opacity-90 transition"
-            >
+          <div className="text-right">
+            <button onClick={handleSubmit}
+              className="px-8 py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black font-semibold rounded-full shadow-md hover:opacity-90 transition">
               Add Show
             </button>
           </div>
@@ -290,4 +198,4 @@ const AddShows = () => {
   );
 };
 
-export default AddShows;
+export default AddShows; 

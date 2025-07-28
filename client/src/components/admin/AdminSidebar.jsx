@@ -5,6 +5,7 @@ import {
   PlusSquareIcon,
   ListIcon,
   ListCollapseIcon,
+  CalendarIcon,
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
@@ -20,6 +21,7 @@ const AdminSidebar = () => {
     { name: 'Add Shows', path: '/admin/add-shows', icon: PlusSquareIcon },
     { name: 'List Shows', path: '/admin/list-shows', icon: ListIcon },
     { name: 'List Bookings', path: '/admin/list-bookings', icon: ListCollapseIcon },
+    { name: 'Calendar', path: '/admin/admin-calender', icon: CalendarIcon }, // ✅ New Calendar Link
   ];
 
   return (

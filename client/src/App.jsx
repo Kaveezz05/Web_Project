@@ -16,6 +16,8 @@ import Dashboard from './pages/admin/Dashboard';
 import AddShows from './pages/admin/AddShows';
 import ListBookings from './pages/admin/ListBookings';
 import ListShows from './pages/admin/ListShows';
+import AdminCalender from './pages/admin/AdminCalender';
+
 
 // Cashier
 import CashierLayout from './pages/cashier/CashierLayout';
@@ -41,7 +43,7 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/movies" element={<Movies />} />
         <Route path="/movies/:id" element={<MovieDetails />} />
-        <Route path="/movies/:id/:date" element={<SeatLayout />} />
+        <Route path="/movies/:id" element={<SeatLayout />} />
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/favorites" element={<Favorites />} />
 
@@ -52,6 +54,9 @@ const App = () => {
           <Route path="list-shows" element={<ListShows />} />
           <Route path="list-bookings" element={<ListBookings />} />
           <Route path="admin-dashboard" element={<Dashboard />} />
+          <Route path="admin-calender" element={<AdminCalender/>}/>
+      
+
         </Route>
 
         {/* Cashier routes */}

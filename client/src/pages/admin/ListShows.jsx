@@ -1,74 +1,74 @@
-import React, { useEffect, useState } from 'react';
-import formatLKR from '../../lib/formatLKR';
-import Loading from '../../components/Loading';
-import Title from '../../components/admin/Title';
-import { dateFormat } from '../../lib/dateFormat';
-import BlurCircle from '../../components/BlurCircle';
+import React, { useEffect, useState } from "react";
+import formatLKR from "../../lib/formatLKR";
+import { dateFormat } from "../../lib/dateFormat";
+import Title from "../../components/admin/Title";
+import Loading from "../../components/Loading";
+import BlurCircle from "../../components/BlurCircle";
 
 const ListShows = () => {
   const [shows, setShows] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const getAllShows = async () => {
-    try {
-      // Replace this with actual API call
-      setShows([]); // No dummy data yet
-      setLoading(false);
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    getAllShows();
+    fetch("http://localhost/vistalite/getshows.php")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setShows(data.shows);
+        } else {
+          console.error(data.error);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Fetch failed:", err);
+        setLoading(false);
+      });
   }, []);
 
-  if (loading) return <Loading />;
-
   return (
-    <>
+    <div className="relative px-6 md:px-10 pb-10 text-[#E5E9F0] min-h-[80vh]">
+      <BlurCircle top="60px" left="-60px" />
+      <BlurCircle bottom="-40px" right="-60px" />
+
       <Title text1="List" text2="Shows" />
 
-      <div className="relative mt-8 px-6 md:px-12 lg:px-20 text-[#E5E9F0]">
-        <BlurCircle top="100px" left="0" />
-        <BlurCircle bottom="0" right="0" />
-
-        {shows.length === 0 ? (
-          <p className="text-center text-gray-400 py-10 text-sm">No shows available.</p>
-        ) : (
-          <div className="overflow-x-auto rounded-xl backdrop-blur-md border border-[#4A9EDE]/20 shadow-xl">
-            <table className="min-w-full table-auto text-sm bg-[#1C1F2E]/60">
-              <thead>
-                <tr className="text-left bg-[#2978B5]/20 text-white">
-                  <th className="py-4 px-6 font-medium">Movie Name</th>
-                  <th className="py-4 px-6 font-medium">Show Time</th>
-                  <th className="py-4 px-6 font-medium">Total Bookings</th>
-                  <th className="py-4 px-6 font-medium">Earnings</th>
+      {loading ? (
+        <Loading />
+      ) : shows.length === 0 ? (
+        <p className="text-white mt-6">No shows found.</p>
+      ) : (
+        <div className="overflow-x-auto mt-6">
+          <table className="min-w-full text-sm text-left text-gray-200 bg-[#111827] border border-[#2f3542] rounded-lg overflow-hidden">
+            <thead className="text-xs uppercase bg-[#1f2937] text-gray-400">
+              <tr>
+                <th className="px-6 py-4">#</th>
+                <th className="px-6 py-4">Movie</th>
+                <th className="px-6 py-4">Show Date</th>
+                <th className="px-6 py-4">Price (LKR)</th>
+                <th className="px-6 py-4">Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              {shows.map((show, index) => (
+                <tr
+                  key={show.id}
+                  className="border-t border-[#2f3542] hover:bg-[#1e293b] transition"
+                >
+                  <td className="px-6 py-4">{index + 1}</td>
+                  <td className="px-6 py-4">{show.movie_title}</td>
+                  <td className="px-6 py-4">
+                    {new Date(show.show_datetime).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4">{formatLKR(show.show_price)}</td>
+                  <td className="px-6 py-4">{dateFormat(show.created_at)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {shows.map((show, index) => (
-                  <tr
-                    key={index}
-                    className={`${
-                      index % 2 === 0 ? 'bg-[#4A9EDE]/5' : 'bg-[#4A9EDE]/10'
-                    } border-b border-[#4A9EDE]/10 hover:bg-[#2978B5]/10 transition`}
-                  >
-                    <td className="px-6 py-4">{show.movie.title}</td>
-                    <td className="px-6 py-4">{dateFormat(show.showDateTime)}</td>
-                    <td className="px-6 py-4">{Object.keys(show.occupiedSeats).length}</td>
-                    <td className="px-6 py-4 font-medium text-[#4A9EDE]">
-                      {formatLKR(Object.keys(show.occupiedSeats).length * show.showPrice)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 };
 

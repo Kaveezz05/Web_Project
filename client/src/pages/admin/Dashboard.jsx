@@ -23,16 +23,29 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate data fetch (replace with real API call)
-    setTimeout(() => {
-      setDashboardData({
-        totalBookings: 0,
-        totalRevenue: 0,
-        activeShows: [],
-        totalUser: 0,
-      });
-      setLoading(false);
-    }, 500);
+    const fetchDashboardData = async () => {
+      try {
+        const [showsRes, usersRes] = await Promise.all([
+          fetch('http://localhost/vistalite/getactiveshows.php'),
+          fetch('http://localhost/vistalite/getusercount.php'),
+        ]);
+
+        const showsData = await showsRes.json();
+        const usersData = await usersRes.json();
+
+        setDashboardData((prev) => ({
+          ...prev,
+          activeShows: showsData.shows || [],
+          totalUser: usersData.total_users || 0,
+        }));
+      } catch (err) {
+        console.error('Dashboard load failed:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
   const dashboardCards = [
@@ -96,28 +109,30 @@ const Dashboard = () => {
           ) : (
             dashboardData.activeShows.map((show) => (
               <div
-                key={show._id}
-                className="w-[220px] rounded-xl overflow-hidden bg-[#1C1F2E]/70 border border-[#2978B5]/20 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition"
+                key={show.movie_id}
+                className="w-[250px] rounded-xl overflow-hidden bg-[#1C1F2E]/70 border border-[#2978B5]/20 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition"
               >
                 <img
-                  src={show.movie.poster_path}
-                  alt={show.movie.title}
+                  src={`http://localhost/vistalite/${show.backdrop_path}`}
+                  alt={show.title}
                   className="h-60 w-full object-cover"
                 />
                 <div className="p-3">
                   <p className="font-semibold truncate text-[#E5E9F0]">
-                    {show.movie.title}
+                    {show.title}
                   </p>
                   <div className="flex items-center justify-between mt-2 text-sm">
-                    <p className="text-[#4A9EDE]">{formatLKR(show.showPrice)}</p>
+                    <p className="text-[#4A9EDE]">{formatLKR(show.show_price)}</p>
                     <div className="flex items-center gap-1 text-gray-400">
                       <StarIcon className="w-4 h-4 text-[#2978B5] fill-[#2978B5]" />
-                      <span>{show.movie.vote_average.toFixed(1)}</span>
+                      <span>{parseFloat(show.vote_average).toFixed(1)}</span>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {dateFormat(show.showDateTime)}
-                  </p>
+                  <div className="mt-2 text-xs text-gray-400 space-y-1 max-h-24 overflow-y-auto pr-1">
+                    {show.showtimes.map((dt, i) => (
+                      <p key={i}>{dateFormat(dt)}</p>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))

@@ -1,149 +1,156 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { dummyDateTimeData, dummyShowsData } from '../assets/assets';
-import { ArrowRightIcon, Heart, PlayCircleIcon, StarIcon } from 'lucide-react';
-import timeFormat from '../lib/timeFormat';
+import { Heart, PlayCircle } from 'lucide-react';
 import DateSelect from '../components/DateSelect';
-import MovieCard from '../components/MovieCard';
-import Loading from '../components/Loading';
 import BlurCircle from '../components/BlurCircle';
 
-const getLanguageName = (code) => {
-  const map = {
-    en: 'English', ja: 'Japanese', te: 'Telugu', hi: 'Hindi',
-    fr: 'French', ko: 'Korean', fil: 'Filipino', es: 'Spanish'
-  };
-  return map[code] || code.toUpperCase();
-};
-
 const MovieDetails = () => {
-  const navigate = useNavigate();
   const { id } = useParams();
-  const [show, setShow] = useState(null);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const navigate = useNavigate();
+
+  const [movie, setMovie] = useState(null);
+  const [dateTime, setDateTime] = useState({});
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const movie = dummyShowsData.find((s) => s._id === id || s.id?.toString() === id);
-    if (movie) {
-      setShow({ movie, dateTime: dummyDateTimeData });
-    } else {
-      setShow(null);
-    }
+    const fetchMovieAndShows = async () => {
+      try {
+        const movieRes = await fetch(`http://localhost/vistalite/getmoviebyid.php?id=${id}`);
+        const movieData = await movieRes.json();
+        if (movieData.success) setMovie(movieData.movie);
+
+        const showRes = await fetch(`http://localhost/vistalite/getmovies.php?movie_id=${id}`);
+        const showData = await showRes.json();
+        if (showData.success) setDateTime(showData.dateTime || {});
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMovieAndShows();
   }, [id]);
 
-  const toggleFavorite = () => setIsFavorite(!isFavorite);
-  if (!show) return <Loading />;
-  const { movie } = show;
+  const handleBookNow = () => {
+    if (!selectedDate || !selectedTime) {
+      alert('Please select both date and time!');
+      return;
+    }
+    const datetime = `${selectedDate} ${selectedTime}`;
+    navigate(`/seats/${id}?datetime=${encodeURIComponent(datetime)}`);
+  };
+
+  if (loading) {
+    return <div className="text-white text-center py-20">Loading...</div>;
+  }
+
+  if (!movie) {
+    return <div className="text-red-500 text-center py-20">Movie not found</div>;
+  }
 
   return (
-    <div className="relative min-h-[85vh] bg-gradient-to-br from-black via-[#0F1A32] to-black text-[#E5E9F0] px-6 md:px-16 lg:px-40 xl:px-44 py-24 overflow-hidden">
-      <BlurCircle top="0px" left="-120px" size="260px" color="rgba(74,144,226,0.25)" />
-      <BlurCircle bottom="0px" right="-100px" size="240px" color="rgba(74,144,226,0.25)" />
+    <div className="relative min-h-screen bg-gradient-to-b from-black via-[#0F1A32] to-black text-[#E5E9F0] overflow-x-hidden px-4 sm:px-8 md:px-16 py-16">
+      <BlurCircle top="40px" left="-100px" />
+      <BlurCircle bottom="60px" right="-100px" />
 
-      <section className="relative w-full max-w-6xl mx-auto bg-black/60 backdrop-blur-md border border-[#4A90E2]/20 rounded-2xl shadow-lg p-6 md:p-10 flex flex-col md:flex-row gap-8 z-10">
-        <div className="flex justify-center md:block">
+      <div className="max-w-6xl mx-auto">
+        {/* Top Section */}
+        <div className="flex flex-col md:flex-row gap-10">
+          {/* Poster */}
           <img
-            src={movie.poster_path}
+            src={`http://localhost/vistalite/${movie.backdrop_path}`}
             alt={movie.title}
-            className="w-56 md:w-64 rounded-xl shadow-xl object-cover border-2 border-[#4A90E2]"
+            className="w-[280px] h-[420px] rounded-xl border border-[#4A9EDE]/30 shadow-lg object-cover"
           />
-        </div>
 
-        <div className="flex flex-col gap-4 flex-1">
-          <div className="flex flex-wrap gap-4 items-center">
-            <p className="px-3 py-1 bg-[#4A90E2]/30 text-[#4A90E2] rounded-full text-sm font-semibold">
-              {getLanguageName(movie.original_language)}
+          {/* Movie Info */}
+          <div className="flex-1 space-y-5">
+            {/* Language & Rating */}
+            <div className="flex items-center gap-3">
+              <span className="px-3 py-1 rounded-full bg-[#1C1F2E]/60 border border-[#4A9EDE]/40 text-sm text-white">
+                {movie.original_language?.toUpperCase()}
+              </span>
+              <span className="text-yellow-400 font-bold text-sm flex items-center gap-1">
+                ⭐ {movie.vote_average}
+              </span>
+            </div>
+
+            {/* Title + Tagline */}
+            <h1 className="text-4xl font-bold text-white">{movie.title}</h1>
+            <p className="italic text-[#A3AED0]">{movie.tagline}</p>
+
+            {/* Genres */}
+            <div className="flex flex-wrap gap-2">
+              {movie.genres?.map((genre, i) => (
+                <span
+                  key={i}
+                  className="bg-[#1C1F2E]/60 px-3 py-1 rounded-full border border-[#4A9EDE]/20 text-sm"
+                >
+                  {genre}
+                </span>
+              ))}
+            </div>
+
+            {/* Duration & Year */}
+            <p className="text-sm text-gray-400">
+              {Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m •{' '}
+              {movie.release_date?.split('-')[0]}
             </p>
-            <div className="flex items-center gap-1 text-yellow-400 text-sm font-semibold">
-              <StarIcon className="w-4 h-4 fill-yellow-400" />
-              <span>{movie.vote_average.toFixed(1)}</span>
+
+            {/* Overview */}
+            <p className="text-[#D1D5DB] leading-relaxed">{movie.overview}</p>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 pt-4">
+              <button className="flex items-center gap-2 px-5 py-2 rounded-full bg-black/30 border border-[#4A90E2]/40 text-white hover:bg-[#4A90E2]/20 transition">
+                <PlayCircle size={20} />
+                Watch Trailer
+              </button>
+              <button
+                onClick={() => {
+                  const dateSelectSection = document.getElementById('date-select');
+                  if (dateSelectSection) dateSelectSection.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-5 py-2 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black rounded-full shadow hover:opacity-90 transition"
+              >
+                Buy Tickets
+              </button>
+              <button className="p-2 rounded-full bg-black/30 border border-[#4A9EDE]/30 text-white hover:bg-[#4A90E2]/20 transition">
+                <Heart size={20} />
+              </button>
             </div>
           </div>
-
-          <h1 className="text-3xl md:text-4xl font-bold mt-2 text-transparent bg-clip-text bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA]">
-            {movie.title}
-          </h1>
-
-          {movie.tagline && <p className="italic text-[#9CA3AF] mt-1">{movie.tagline}</p>}
-
-          <div className="flex flex-wrap gap-2 mt-2">
-            {movie.genres.map((g, idx) => (
-              <span key={idx} className="px-3 py-1 bg-[#303D5A] rounded-full text-xs">
-                {g.name}
-              </span>
-            ))}
-          </div>
-
-          <div className="text-sm text-[#9CA3AF] mt-3">
-            {movie.runtime && <span>{timeFormat(movie.runtime)} • </span>}
-            {movie.release_date.split('-')[0]}
-          </div>
-
-          <p className="text-[#D1D5DB] mt-4 leading-relaxed">{movie.overview}</p>
-
-          <div className="flex flex-wrap items-center gap-4 mt-6">
-            <button className="flex items-center gap-2 px-6 py-2.5 text-sm bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black rounded-full shadow-md hover:opacity-90 transition">
-              <PlayCircleIcon className="w-4 h-4" />
-              Watch Trailer
-            </button>
-
-            <a
-              href="#dateSelect"
-              className="px-8 py-2.5 text-sm bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black rounded-full shadow-md hover:opacity-90 transition"
-            >
-              Buy Tickets
-            </a>
-
-            <button
-              onClick={toggleFavorite}
-              className={`p-2.5 rounded-full shadow-md transition ${
-                isFavorite ? 'bg-red-500 text-white' : 'bg-[#303D5A] hover:bg-[#4A90E2]'
-              }`}
-            >
-              <Heart className={`w-5 h-5 ${isFavorite ? 'fill-white' : ''}`} />
-            </button>
-          </div>
         </div>
-      </section>
 
-      <section
-        id="dateSelect"
-        className="w-full max-w-6xl mt-12 mx-auto bg-gradient-to-br from-[#0F1A32]/80 to-[#000000]/80 border border-[#303D5A]/40 rounded-xl shadow-xl p-6 backdrop-blur-md"
-      >
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-          <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA]">
-            Select Your Preferred Date
+        {/* Date Selection */}
+        <div id="date-select" className="mt-20">
+          <h2 className="text-xl font-bold mb-6">
+            <span className="text-[#4A90E2]">Select</span> Your Preferred Date
           </h2>
-          <div className="text-xs sm:text-sm text-[#A3AED0]">
-            {movie.title} • {movie.runtime ? timeFormat(movie.runtime) : 'N/A'}
+
+          <div className="bg-[#1C1F2E]/60 p-6 rounded-xl border border-[#4A9EDE]/20 shadow-md">
+            <DateSelect
+              dateTime={dateTime}
+              selectedDate={selectedDate}
+              selectedTime={selectedTime}
+              setSelectedDate={setSelectedDate}
+              setSelectedTime={setSelectedTime}
+            />
+
+            <div className="text-right pt-6">
+              <button
+                onClick={handleBookNow}
+                className="px-8 py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black font-semibold rounded-full shadow-md hover:opacity-90 transition"
+              >
+                Book Now
+              </button>
+            </div>
           </div>
         </div>
-
-        <div className="relative z-10">
-          <DateSelect dateTime={show.dateTime} id={movie.id} compact={true} />
-        </div>
-      </section>
-
-      <section className="w-full max-w-6xl mt-12 mx-auto z-10">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA]">
-            You May Also Like
-          </h2>
-          <button
-            onClick={() => navigate('/movies')}
-            className="text-sm text-transparent bg-clip-text bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] group flex items-center gap-1"
-          >
-            View All
-            <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-0.5 transition" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {dummyShowsData.filter(m => m.id !== movie.id).slice(0, 4).map((m, idx) => (
-            <MovieCard key={idx} movie={m} />
-          ))}
-        </div>
-      </section>
+      </div>
     </div>
   );
 };
