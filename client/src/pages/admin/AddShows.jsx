@@ -5,6 +5,7 @@ import Title from '../../components/admin/Title';
 
 const genreOptions = ['Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Drama', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller'];
 const languageOptions = ['en', 'hi', 'ta', 'te', 'ko', 'ja'];
+const defaultTimeSlots = ['10:00', '13:00', '16:00', '19:00', '22:00'];
 
 const AddShows = () => {
   const [formData, setFormData] = useState({
@@ -20,8 +21,16 @@ const AddShows = () => {
 
   const [posterFile, setPosterFile] = useState(null);
   const [posterPreview, setPosterPreview] = useState(null);
-  const [dateTimeInput, setDateTimeInput] = useState('');
-  const [dateTimeSelection, setDateTimeSelection] = useState({});
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const toggleTimeSlot = (slot) => {
+    setSelectedTimeSlots((prev) =>
+      prev.includes(slot) ? prev.filter((t) => t !== slot) : [...prev, slot]
+    );
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -45,39 +54,29 @@ const AddShows = () => {
     }
   };
 
-  const handleDateTimeAdd = () => {
-    if (!dateTimeInput) return;
-    const [date, time] = dateTimeInput.split('T');
-    if (!date || !time) return;
-    setDateTimeSelection((prev) => {
-      const existing = prev[date] || [];
-      if (!existing.includes(time)) {
-        return { ...prev, [date]: [...existing, time] };
-      }
-      return prev;
-    });
-    setDateTimeInput('');
-  };
+  const generateShowSchedule = () => {
+    const schedule = {};
+    if (!startDate || !endDate || selectedTimeSlots.length === 0) return schedule;
 
-  const handleRemoveTime = (prev, date, time) => {
-    const updated = prev[date].filter((t) => t !== time);
-    if (updated.length === 0) {
-      const { [date]: _, ...rest } = prev;
-      return rest;
+    const current = new Date(startDate);
+    const end = new Date(endDate);
+
+    while (current <= end) {
+      const dateStr = current.toISOString().split('T')[0];
+      schedule[dateStr] = [...selectedTimeSlots];
+      current.setDate(current.getDate() + 1);
     }
-    return { ...prev, [date]: updated };
+
+    return schedule;
   };
 
   const handleSubmit = async () => {
-    if (!formData.title.trim()) {
-      alert('Please enter the movie title.');
+    if (!formData.title.trim() || !posterFile || selectedTimeSlots.length === 0 || !startDate || !endDate) {
+      alert('Please fill all required fields and select date range & time slots.');
       return;
     }
 
-    if (!posterFile) {
-      alert('Please select a poster image.');
-      return;
-    }
+    const showSchedule = generateShowSchedule();
 
     const form = new FormData();
     form.append('title', formData.title);
@@ -89,7 +88,7 @@ const AddShows = () => {
     form.append('overview', formData.overview);
     form.append('price', formData.price);
     form.append('poster', posterFile);
-    form.append('showDateTime', JSON.stringify(dateTimeSelection));
+    form.append('showDateTime', JSON.stringify(showSchedule));
 
     try {
       await fetch('http://localhost/vistalite/addshows.php', {
@@ -97,8 +96,9 @@ const AddShows = () => {
         body: form,
       });
 
-      alert(`✅ Movie "${formData.title}" was successfully added!`);
-      window.location.reload();
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       alert('❌ Something went wrong. Please try again.');
     }
@@ -122,11 +122,10 @@ const AddShows = () => {
           <div className="flex flex-wrap gap-2">
             {genreOptions.map((genre) => (
               <button key={genre} type="button" onClick={() => handleGenreToggle(genre)}
-                className={`px-3 py-1 rounded-full border text-sm transition ${
-                  formData.genres.includes(genre)
+                className={`px-3 py-1 rounded-full border text-sm transition ${formData.genres.includes(genre)
                     ? 'bg-[#4A90E2]/80 border-[#4A90E2] text-white'
                     : 'bg-black/50 border-[#4A9EDE] text-[#A3AED0]'
-                }`}>
+                  }`}>
                 {genre}
               </button>
             ))}
@@ -158,33 +157,24 @@ const AddShows = () => {
           <input type="number" name="price" value={formData.price} onChange={handleInputChange}
             placeholder="Ticket Price (LKR)" className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white" />
 
-          <div className="flex items-center gap-4">
-            <input type="datetime-local" value={dateTimeInput} onChange={(e) => setDateTimeInput(e.target.value)}
-              className="px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white" />
-            <button onClick={handleDateTimeAdd}
-              className="px-4 py-2 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black font-semibold rounded-full shadow-md hover:opacity-90 transition">
-              Add Time
-            </button>
+          <div className="flex gap-4">
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+              className="flex-1 px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white" placeholder="Start Date" />
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
+              className="flex-1 px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white" placeholder="End Date" />
           </div>
 
-          {Object.keys(dateTimeSelection).length > 0 && (
-            <div className="space-y-4">
-              {Object.entries(dateTimeSelection).map(([date, times]) => (
-                <div key={date}>
-                  <p className="font-semibold text-[#A3AED0]">{date}</p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {times.map((time) => (
-                      <div key={time} className="flex items-center px-3 py-1 rounded-full border border-[#4A90E2] text-white bg-black/40">
-                        {time}
-                        <DeleteIcon width={16} className="ml-2 text-red-500 hover:text-red-700 cursor-pointer"
-                          onClick={() => setDateTimeSelection((prev) => handleRemoveTime(prev, date, time))} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="flex flex-wrap gap-2">
+            {defaultTimeSlots.map((slot) => (
+              <button key={slot} type="button" onClick={() => toggleTimeSlot(slot)}
+                className={`px-4 py-2 rounded-full border ${selectedTimeSlots.includes(slot)
+                    ? 'bg-[#4A90E2]/80 border-[#4A90E2] text-white'
+                    : 'bg-black/50 border-[#4A9EDE] text-[#A3AED0]'
+                  }`}>
+                {slot}
+              </button>
+            ))}
+          </div>
 
           <div className="text-right">
             <button onClick={handleSubmit}
@@ -194,8 +184,16 @@ const AddShows = () => {
           </div>
         </div>
       </div>
+
+      {showSuccess && (
+        <div className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
+          <div className="bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black px-6 py-2 rounded-full shadow-lg text-sm font-medium animate-drop-fade">
+            ✅ "{formData.title}" was successfully added!
+          </div>
+        </div>
+      )}
     </>
   );
 };
 
-export default AddShows; 
+export default AddShows;

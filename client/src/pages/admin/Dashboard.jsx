@@ -60,7 +60,7 @@ const Dashboard = () => {
       icon: CircleDollarSignIcon,
     },
     {
-      title: 'Active Shows',
+      title: 'Active Movies',
       value: dashboardData.activeShows?.length ?? 0,
       icon: PlayCircleIcon,
     },

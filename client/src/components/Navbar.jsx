@@ -78,7 +78,6 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center gap-8">
-        <SearchIcon className="max-md:hidden w-6 h-6 cursor-pointer text-gray-300 hover:text-[#4682B4] transition" />
         <button className="px-4 py-1 sm:px-7 sm:py-2 bg-[#9CA3AF]/30 hover:bg-[#4682B4] transition rounded-full font-medium text-white cursor-pointer">
           <Login />
         </button>

@@ -16,7 +16,7 @@ const CashierSidebar = () => {
 
   const navItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/cashier' },
-    { label: 'Bookings', icon: ClipboardList, path: '/cashier/bookings' },
+    { label: 'List Bookings', icon: ClipboardList, path: '/cashier/bookings' },
     { label: 'Filter by Date', icon: CalendarDays, path: '/cashier/filter' },
   ];
 

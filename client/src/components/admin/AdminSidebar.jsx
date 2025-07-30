@@ -6,6 +6,7 @@ import {
   ListIcon,
   ListCollapseIcon,
   CalendarIcon,
+  VideoIcon,
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
@@ -19,8 +20,8 @@ const AdminSidebar = () => {
   const adminNavlinks = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboardIcon },
     { name: 'Add Shows', path: '/admin/add-shows', icon: PlusSquareIcon },
+    { name: 'Add Trailers', path: '/admin/add-trailer', icon: VideoIcon },
     { name: 'List Shows', path: '/admin/list-shows', icon: ListIcon },
-    { name: 'List Bookings', path: '/admin/list-bookings', icon: ListCollapseIcon },
     { name: 'Calendar', path: '/admin/admin-calender', icon: CalendarIcon }, // ✅ New Calendar Link
   ];
 

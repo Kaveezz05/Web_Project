@@ -14,7 +14,6 @@ import { Toaster } from 'react-hot-toast';
 import Layout from './pages/admin/Layout';
 import Dashboard from './pages/admin/Dashboard';
 import AddShows from './pages/admin/AddShows';
-import ListBookings from './pages/admin/ListBookings';
 import ListShows from './pages/admin/ListShows';
 import AdminCalender from './pages/admin/AdminCalender';
 
@@ -24,6 +23,7 @@ import CashierLayout from './pages/cashier/CashierLayout';
 import CashierDashboard from './pages/cashier/CashierDashboard';
 import CashierBookings from './pages/cashier/CashierBookings';
 import CashierDate from './pages/cashier/CashierDate';
+import AddTrailer from './pages/admin/AddTrailer';
 
 
 
@@ -43,7 +43,7 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/movies" element={<Movies />} />
         <Route path="/movies/:id" element={<MovieDetails />} />
-        <Route path="/movies/:id" element={<SeatLayout />} />
+         <Route path="/seats/:id/:date" element={<SeatLayout />} />
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/favorites" element={<Favorites />} />
 
@@ -52,9 +52,9 @@ const App = () => {
           <Route index element={<Dashboard />} />
           <Route path="add-shows" element={<AddShows />} />
           <Route path="list-shows" element={<ListShows />} />
-          <Route path="list-bookings" element={<ListBookings />} />
           <Route path="admin-dashboard" element={<Dashboard />} />
           <Route path="admin-calender" element={<AdminCalender/>}/>
+          <Route path="add-trailer" element={<AddTrailer/>}/>
       
 
         </Route>
@@ -64,7 +64,7 @@ const App = () => {
           <Route index element={<CashierDashboard />} />
           <Route index element={<CashierDashboard />} />
           <Route path="bookings" element={<CashierBookings/>} />
-           <Route path="filter" element={<CashierDate />} />
+          <Route path="filter" element={<CashierDate />} />
         </Route>
       </Routes>
 
