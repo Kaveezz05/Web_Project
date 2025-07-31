@@ -1,14 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BlurCircle from '../../components/BlurCircle';
 import Title from '../../components/admin/Title';
 
 const AddTrailer = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     title: '',
     url: '',
   });
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // ✅ Admin session check
+  useEffect(() => {
+    const checkAuth = async () => {
+      const res = await fetch('http://localhost/vistalite/admin-auth.php', {
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!data.success) {
+        navigate('/login');
+      }
+    };
+    checkAuth();
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,12 +50,10 @@ const AddTrailer = () => {
     setLoading(true);
     try {
       const res = await fetch('http://localhost/vistalite/addtrailer.php', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(formData),
-});
-
-
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
 
       const data = await res.json();
       if (data.success) {

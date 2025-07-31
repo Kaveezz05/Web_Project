@@ -7,24 +7,25 @@ import BlurCircle from '../components/BlurCircle';
 import toast from 'react-hot-toast';
 
 const SeatLayout = () => {
-  // ✅ Scroll to top on page load
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-
   const groupRows = [['A', 'B'], ['C', 'D'], ['E', 'F'], ['G', 'H'], ['I', 'J']];
   const { id, date } = useParams();
+  const navigate = useNavigate();
+
   const selectedDate = date;
   const [availableTimes, setAvailableTimes] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [bookedSeats, setBookedSeats] = useState([]);
   const [selectedTime, setSelectedTime] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   const handleSeatClick = (seatId) => {
     if (!selectedTime) return toast('Please select time first');
     if (bookedSeats.includes(seatId)) return;
+
     setSelectedSeats((prev) =>
       prev.includes(seatId)
         ? prev.filter((seat) => seat !== seatId)
@@ -59,31 +60,48 @@ const SeatLayout = () => {
     </div>
   );
 
+  // ✅ Fetch available future show times for this movie and date
   useEffect(() => {
     const fetchShowTimes = async () => {
       try {
         const res = await fetch(`http://localhost/vistalite/getshowtimes.php?movie_id=${id}`);
         const data = await res.json();
+
         if (data.success && data.dateTime[selectedDate]) {
-          setAvailableTimes(data.dateTime[selectedDate].map((t) => ({ time: t })));
+          const now = new Date();
+          const filtered = data.dateTime[selectedDate].filter((time) => {
+            const fullTime = new Date(`${selectedDate}T${time}`);
+            return fullTime > now;
+          });
+
+          if (filtered.length === 0) {
+            toast.error('All showtimes for this date have expired.');
+          }
+
+          setAvailableTimes(filtered.map((time) => ({ time })));
         } else {
-          toast.error("No timings available for this date.");
+          toast.error('No timings available for this date.');
         }
       } catch (err) {
-        toast.error("Failed to load show timings.");
+        toast.error('Failed to load show timings.');
       } finally {
         setLoading(false);
       }
     };
+
     fetchShowTimes();
   }, [id, selectedDate]);
 
+  // ✅ Fetch already booked seats for selected time
   useEffect(() => {
     if (!selectedTime) return;
+
     const fetchBookedSeats = async () => {
       try {
         const datetime = `${selectedDate} ${selectedTime.time}`;
-        const res = await fetch(`http://localhost/vistalite/getbookedseats.php?movie_id=${id}&datetime=${encodeURIComponent(datetime)}`);
+        const res = await fetch(
+          `http://localhost/vistalite/getbookedseats.php?movie_id=${id}&datetime=${encodeURIComponent(datetime)}`
+        );
         const data = await res.json();
         if (data.success) {
           setBookedSeats(data.seats || []);
@@ -92,6 +110,7 @@ const SeatLayout = () => {
         toast.error('Failed to load booked seats');
       }
     };
+
     fetchBookedSeats();
   }, [selectedTime, id, selectedDate]);
 
@@ -157,7 +176,7 @@ const SeatLayout = () => {
           <button
             onClick={() => {
               if (!selectedTime || selectedSeats.length === 0) {
-                toast.error("Please select time and seats!");
+                toast.error('Please select time and seats!');
                 return;
               }
               navigate('/my-bookings');

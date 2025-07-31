@@ -9,7 +9,10 @@ const Movies = () => {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const res = await fetch('http://127.0.0.1/vistalite/getmovies.php');
+        const res = await fetch('http://localhost/vistalite/getmovies.php', {
+          credentials: 'include',
+        });
+
         const text = await res.text();
         console.log('RAW Response:', text);
         const data = JSON.parse(text);

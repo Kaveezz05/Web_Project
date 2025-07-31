@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DeleteIcon } from 'lucide-react';
 import BlurCircle from '../../components/BlurCircle';
 import Title from '../../components/admin/Title';
@@ -8,6 +9,8 @@ const languageOptions = ['en', 'hi', 'ta', 'te', 'ko', 'ja'];
 const defaultTimeSlots = ['10:00', '13:00', '16:00', '19:00', '22:00'];
 
 const AddShows = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     title: '',
     tagline: '',
@@ -25,6 +28,19 @@ const AddShows = () => {
   const [endDate, setEndDate] = useState('');
   const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // ✅ Admin session check
+  useEffect(() => {
+    const checkAdminAuth = async () => {
+      const res = await fetch("http://localhost/vistalite/admin-auth.php", {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!data.success) navigate("/login");
+    };
+
+    checkAdminAuth();
+  }, [navigate]);
 
   const toggleTimeSlot = (slot) => {
     setSelectedTimeSlots((prev) =>
@@ -71,36 +87,49 @@ const AddShows = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.title.trim() || !posterFile || selectedTimeSlots.length === 0 || !startDate || !endDate) {
-      alert('Please fill all required fields and select date range & time slots.');
+    if (
+      !formData.title.trim() ||
+      !posterFile ||
+      !startDate ||
+      !endDate ||
+      selectedTimeSlots.length === 0
+    ) {
+      alert('⚠️ Please fill all required fields including poster, dates, and times.');
       return;
     }
 
     const showSchedule = generateShowSchedule();
-
     const form = new FormData();
-    form.append('title', formData.title);
-    form.append('tagline', formData.tagline);
+
+    form.append('title', formData.title.trim());
+    form.append('tagline', formData.tagline.trim());
     form.append('genres', JSON.stringify(formData.genres));
     form.append('language', formData.language);
-    form.append('runtime', formData.runtime);
+    form.append('runtime', formData.runtime.trim());
     form.append('release_date', formData.releaseDate);
-    form.append('overview', formData.overview);
+    form.append('overview', formData.overview.trim());
     form.append('price', formData.price);
     form.append('poster', posterFile);
     form.append('showDateTime', JSON.stringify(showSchedule));
 
     try {
-      await fetch('http://localhost/vistalite/addshows.php', {
+      const res = await fetch('http://localhost/vistalite/addshows.php', {
         method: 'POST',
         body: form,
       });
 
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-      setTimeout(() => window.location.reload(), 1000);
+      const data = await res.json();
+
+      if (data.success) {
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        alert(`❌ Failed: ${data.message}`);
+      }
     } catch (err) {
-      alert('❌ Something went wrong. Please try again.');
+      console.error(err);
+      alert('❌ Network error. Please try again.');
     }
   };
 
@@ -112,7 +141,6 @@ const AddShows = () => {
         <BlurCircle bottom="0" right="-100px" />
 
         <div className="bg-[#1C1F2E]/60 border border-[#4A9EDE]/20 backdrop-blur-md rounded-xl shadow-xl p-8 max-w-3xl mx-auto space-y-8">
-
           <input type="text" name="title" value={formData.title} onChange={handleInputChange}
             placeholder="Movie Title" className="w-full px-4 py-2 rounded-lg bg-black/50 border border-[#4A9EDE] text-white" />
 

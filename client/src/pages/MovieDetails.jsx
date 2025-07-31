@@ -14,7 +14,7 @@ const MovieDetails = () => {
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
 
-  const username = localStorage.getItem("username") || "guest";
+  const username = localStorage.getItem('username') || 'guest';
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -23,25 +23,46 @@ const MovieDetails = () => {
   useEffect(() => {
     const fetchMovieData = async () => {
       try {
-        const res = await fetch(`http://localhost/vistalite/getmoviebyid.php?id=${id}`);
+        const res = await fetch(`http://localhost/vistalite/getmoviebyid.php?id=${id}&_=${Date.now()}`, {
+          credentials: 'include',
+        });
         const data = await res.json();
         if (data.success) {
           const m = data.movie;
-          m.genres = typeof m.genres === 'string' ? JSON.parse(m.genres || '[]') : m.genres;
+          m.genres = Array.isArray(m.genres) ? m.genres : JSON.parse(m.genres || '[]');
           setMovie(m);
+        } else {
+          console.error('Movie not found:', data.error);
         }
       } catch (err) {
-        console.error(err);
+        console.error('Movie fetch error:', err);
       }
     };
 
     const fetchDates = async () => {
       try {
-        const res = await fetch(`http://localhost/vistalite/getshowtimes.php?movie_id=${id}`);
+        const res = await fetch(`http://localhost/vistalite/getshowtimes.php?movie_id=${id}&_=${Date.now()}`, {
+          credentials: 'include',
+        });
         const data = await res.json();
-        if (data.success) setDateTime(data.dateTime || {});
+        if (data.success && data.dateTime) {
+          const now = new Date();
+          const filtered = {};
+
+          Object.entries(data.dateTime).forEach(([dateStr, times]) => {
+            const validTimes = times.filter((timeStr) => {
+              const full = new Date(`${dateStr}T${timeStr}`);
+              return full > now;
+            });
+            if (validTimes.length > 0) {
+              filtered[dateStr] = validTimes;
+            }
+          });
+
+          setDateTime(filtered);
+        }
       } catch (err) {
-        console.error(err);
+        console.error('Showtime fetch error:', err);
       } finally {
         setLoading(false);
       }
@@ -50,25 +71,24 @@ const MovieDetails = () => {
     fetchMovieData();
     fetchDates();
 
-    // Load favorites from localStorage
-    const favorites = JSON.parse(localStorage.getItem(`favorites_${username}`)) || [];
-    setIsFavorite(favorites.includes(id));
+    const favs = JSON.parse(localStorage.getItem(`favorites_${username}`)) || [];
+    setIsFavorite(favs.includes(id));
   }, [id, username]);
 
   const handleFavorite = () => {
     const key = `favorites_${username}`;
-    const existingFavorites = JSON.parse(localStorage.getItem(key)) || [];
-    let updatedFavorites;
+    const favs = JSON.parse(localStorage.getItem(key)) || [];
+    let updated = [];
 
-    if (existingFavorites.includes(id)) {
-      updatedFavorites = existingFavorites.filter((favId) => favId !== id);
+    if (favs.includes(id)) {
+      updated = favs.filter(f => f !== id);
       setIsFavorite(false);
     } else {
-      updatedFavorites = [...existingFavorites, id];
+      updated = [...favs, id];
       setIsFavorite(true);
     }
 
-    localStorage.setItem(key, JSON.stringify(updatedFavorites));
+    localStorage.setItem(key, JSON.stringify(updated));
   };
 
   const handleBookNow = () => {
@@ -87,7 +107,7 @@ const MovieDetails = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row gap-10 items-start">
           <img
-            src={`http://localhost/vistalite/${movie.backdrop_path}`}
+            src={`http://localhost/vistalite/${movie.backdrop_path.replace(/^\/?/, '')}`}
             alt={movie.title}
             className="w-[280px] h-[420px] rounded-xl border border-[#4A9EDE]/30 shadow-lg object-cover"
           />
@@ -103,7 +123,7 @@ const MovieDetails = () => {
             </div>
 
             <h1 className="text-4xl font-bold text-white">{movie.title}</h1>
-            <p className="italic text-[#A3AED0]">{movie.tagline}</p>
+            <p className="italic text-[#A3AED0]">{movie.tagline || 'No tagline available'}</p>
 
             <div className="flex flex-wrap gap-2">
               {movie.genres?.map((genre, i) => (
@@ -120,7 +140,7 @@ const MovieDetails = () => {
               {Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m • {movie.release_date?.split('-')[0]}
             </p>
 
-            <p className="text-[#D1D5DB] leading-relaxed">{movie.overview}</p>
+            <p className="text-[#D1D5DB] leading-relaxed">{movie.overview || 'No description available'}</p>
 
             <div className="flex flex-wrap gap-4 pt-6">
               <button className="flex items-center gap-2 px-5 py-2 rounded-full bg-black/30 border border-[#4A90E2]/40 text-white hover:bg-[#4A90E2]/20 transition">
@@ -129,12 +149,7 @@ const MovieDetails = () => {
               </button>
 
               <button
-                onClick={() => {
-                  document.getElementById('date-select')?.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                  });
-                }}
+                onClick={() => document.getElementById('date-select')?.scrollIntoView({ behavior: 'smooth' })}
                 className="px-5 py-2 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black rounded-full shadow hover:opacity-90 transition"
               >
                 Buy Tickets

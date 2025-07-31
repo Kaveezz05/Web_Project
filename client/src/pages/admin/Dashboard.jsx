@@ -6,6 +6,7 @@ import {
   UsersIcon,
   StarIcon,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import formatLKR from '../../lib/formatLKR';
 import Loading from '../../components/Loading';
 import BlurCircle from '../../components/BlurCircle';
@@ -13,6 +14,8 @@ import Title from '../../components/admin/Title';
 import { dateFormat } from '../../lib/dateFormat';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+
   const [dashboardData, setDashboardData] = useState({
     totalBookings: 0,
     totalRevenue: 0,
@@ -23,30 +26,48 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [showsRes, usersRes] = await Promise.all([
-          fetch('http://localhost/vistalite/getactiveshows.php'),
-          fetch('http://localhost/vistalite/getusercount.php'),
-        ]);
-
-        const showsData = await showsRes.json();
-        const usersData = await usersRes.json();
-
-        setDashboardData((prev) => ({
-          ...prev,
-          activeShows: showsData.shows || [],
-          totalUser: usersData.total_users || 0,
-        }));
-      } catch (err) {
-        console.error('Dashboard load failed:', err);
-      } finally {
-        setLoading(false);
-      }
+    const init = async () => {
+      const res = await fetch("http://localhost/vistalite/admin-auth.php", {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!data.success) navigate("/login");
+      else fetchDashboardData();
     };
 
-    fetchDashboardData();
-  }, []);
+    init();
+  }, [navigate]);
+
+  const fetchDashboardData = async () => {
+    try {
+      const [showsRes, usersRes] = await Promise.all([
+        fetch('http://localhost/vistalite/getactiveshows.php'),
+        fetch('http://localhost/vistalite/getusercount.php'),
+      ]);
+
+      const showsData = await showsRes.json();
+      const usersData = await usersRes.json();
+
+      const now = new Date();
+
+      const upcomingShows = (showsData.shows || [])
+        .map((show) => {
+          const futureTimes = show.showtimes.filter((dt) => new Date(dt) > now);
+          return { ...show, showtimes: futureTimes };
+        })
+        .filter((show) => show.showtimes.length > 0);
+
+      setDashboardData((prev) => ({
+        ...prev,
+        activeShows: upcomingShows,
+        totalUser: usersData.total_users || 0,
+      }));
+    } catch (err) {
+      console.error('Dashboard load failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const dashboardCards = [
     {
@@ -97,7 +118,7 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Active Shows Section */}
+        {/* Active Shows */}
         <p className="mt-12 text-lg font-semibold text-[#E5E9F0] border-b border-[#4A9EDE] pb-2">
           Active Shows
         </p>
@@ -118,9 +139,7 @@ const Dashboard = () => {
                   className="h-60 w-full object-cover"
                 />
                 <div className="p-3">
-                  <p className="font-semibold truncate text-[#E5E9F0]">
-                    {show.title}
-                  </p>
+                  <p className="font-semibold truncate text-[#E5E9F0]">{show.title}</p>
                   <div className="flex items-center justify-between mt-2 text-sm">
                     <p className="text-[#4A9EDE]">{formatLKR(show.show_price)}</p>
                     <div className="flex items-center gap-1 text-gray-400">

@@ -1,10 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BlurCircle from '../../components/BlurCircle';
 import Title from '../../components/admin/Title';
 
 const AdminCalendar = () => {
+  const navigate = useNavigate();
+
   const now = new Date();
   const [currentDate, setCurrentDate] = useState(new Date(now.getFullYear(), now.getMonth(), 1));
+
+  // ✅ Admin session check
+  useEffect(() => {
+    const checkAdminAuth = async () => {
+      const res = await fetch("http://localhost/vistalite/admin-auth.php", {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!data.success) navigate("/login");
+    };
+
+    checkAdminAuth();
+  }, [navigate]);
 
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const getStartDay = (year, month) => new Date(year, month, 1).getDay();

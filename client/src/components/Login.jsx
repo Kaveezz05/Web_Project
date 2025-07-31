@@ -2,6 +2,7 @@ import React, { useState, memo } from "react";
 import { FaUser, FaLock } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import useAuth from "../hooks/useAuth"; // ✅ useAuth hook
 
 const InputWithIcon = memo(({ icon: Icon, ...props }) => (
   <div className="relative">
@@ -16,7 +17,6 @@ const InputWithIcon = memo(({ icon: Icon, ...props }) => (
 const Login = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [action, setAction] = useState("login");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
@@ -28,6 +28,7 @@ const Login = () => {
   const [regUsername, setRegUsername] = useState("");
   const [regPassword, setRegPassword] = useState("");
 
+  const { user, login, logout } = useAuth(); // ✅ using the hook
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -41,41 +42,35 @@ const Login = () => {
     }
 
     try {
+      const formData = new URLSearchParams();
+      formData.append("username", loginUsername.trim());
+      formData.append("password", loginPassword.trim());
+
       const res = await fetch("http://localhost/vistalite/login.php", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: loginUsername.trim(),
-          password: loginPassword.trim(),
-        }),
+        credentials: "include",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData,
       });
 
       const data = await res.json();
 
-      if (!res.ok || data.error || !data.success) {
-        alert(data.error || "Login failed");
+      if (!res.ok || !data.success) {
+        alert(data.message || "Login failed");
         setLoading(false);
         return;
       }
 
-      setIsAuthenticated(true);
+      login({ username: data.username }); // ✅ saves user in sessionStorage
       setShowLogin(false);
       setLoading(false);
-      setLoginUsername(loginUsername.trim());
-
-      // Show welcome message
       setShowWelcomePopup(true);
       setTimeout(() => setShowWelcomePopup(false), 3000);
 
-      // Navigate by role
-      const username = loginUsername.trim().toLowerCase();
-      if (username === "admin") {
-        navigate("/admin");
-      } else if (username === "cashier") {
-        navigate("/cashier");
-      } else {
-        navigate("/");
-      }
+      const username = data.username.toLowerCase();
+      if (username === "admin") navigate("/admin");
+      else if (username === "cashier") navigate("/cashier");
+      else navigate("/");
 
     } catch (error) {
       console.error("Login error:", error);
@@ -95,25 +90,27 @@ const Login = () => {
     }
 
     try {
+      const formData = new URLSearchParams();
+      formData.append("email", regEmail.trim());
+      formData.append("username", regUsername.trim());
+      formData.append("password", regPassword.trim());
+
       const res = await fetch("http://localhost/vistalite/register.php", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: regEmail.trim(),
-          username: regUsername.trim(),
-          password: regPassword.trim(),
-        }),
+        credentials: "include",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData,
       });
 
       const data = await res.json();
 
-      if (!res.ok || data.error || !data.success) {
-        alert(data.error || "Registration failed");
+      if (!res.ok || !data.success) {
+        alert(data.message || "Registration failed");
         setLoading(false);
         return;
       }
 
-      alert("Registration successful");
+      alert("🎉 Registration successful!");
       setAction("login");
       setRegEmail("");
       setRegUsername("");
@@ -127,15 +124,14 @@ const Login = () => {
   };
 
   const confirmLogout = () => {
-    setIsAuthenticated(false);
+    logout(); // ✅ clear session
     setShowLogoutConfirm(false);
-    setLoginUsername("");
     navigate("/");
   };
 
   return (
     <>
-      {!isAuthenticated ? (
+      {!user ? (
         <button
           onClick={() => setShowLogin(true)}
           className="px-5 py-2 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] transition rounded-full font-semibold text-black"
@@ -144,9 +140,9 @@ const Login = () => {
         </button>
       ) : (
         <div className="relative inline-flex items-center space-x-3">
-          <div className="flex items-center space-x-2 bg-black/80 border border-[#303D5A] rounded-full px-3 py-1 cursor-default select-none text-[#E5E9F0] text-sm font-semibold">
+          <div className="flex items-center space-x-2 bg-black/80 border border-[#303D5A] rounded-full px-3 py-1 text-[#E5E9F0] text-sm font-semibold">
             <FaUser className="w-5 h-5 text-[#2978B5]" />
-            <span>{loginUsername}</span>
+            <span>{user.username}</span>
           </div>
           <button
             onClick={() => setShowLogoutConfirm(true)}
@@ -157,15 +153,12 @@ const Login = () => {
         </div>
       )}
 
-      {/* Login Modal */}
       {showLogin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm min-h-screen">
           <div className="relative w-full max-w-md bg-black/80 border border-[#303D5A] rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">
             <button
               onClick={() => setShowLogin(false)}
-              className="absolute top-4 right-4 text-3xl font-bold text-[#A3AED0] hover:text-[#2978B5] transition"
-              aria-label="Close Login Modal"
-              type="button"
+              className="absolute top-4 right-4 text-3xl font-bold text-[#A3AED0] hover:text-[#2978B5]"
             >
               &times;
             </button>
@@ -202,7 +195,7 @@ const Login = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] transition rounded-full font-semibold disabled:opacity-50 text-black"
+                    className="w-full py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] rounded-full font-semibold text-black"
                   >
                     {loading ? "Signing In..." : "Sign In"}
                   </button>
@@ -251,7 +244,7 @@ const Login = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] transition rounded-full font-semibold disabled:opacity-50 text-black"
+                    className="w-full py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] rounded-full font-semibold text-black"
                   >
                     {loading ? "Signing Up..." : "Sign Up"}
                   </button>
@@ -273,32 +266,29 @@ const Login = () => {
         </div>
       )}
 
-      {/* Logout Confirm */}
-    {showLogoutConfirm && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center min-h-screen bg-black/80 backdrop-blur-sm">
-    <div className="bg-[#1C1F2E] border border-[#4A90E2]/30 p-8 rounded-xl shadow-xl text-white max-w-sm w-full">
-      <h2 className="text-xl font-bold mb-4">Confirm Logout</h2>
-      <p className="text-sm text-[#A3AED0] mb-6">Are you sure you want to logout?</p>
-      <div className="flex justify-end gap-4">
-        <button
-          onClick={() => setShowLogoutConfirm(false)}
-          className="px-4 py-2 rounded-full bg-[#303D5A] hover:bg-[#4A9EDE] text-white"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={confirmLogout}
-          className="px-6 py-2 rounded-full bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black font-semibold shadow-md"
-        >
-          Confirm
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#1C1F2E]/90 border border-[#4A9EDE]/20 px-8 py-6 rounded-xl text-center shadow-xl max-w-sm w-full">
+            <h2 className="text-xl font-bold mb-4">Confirm Logout</h2>
+            <p className="text-sm text-[#A3AED0] mb-6">Are you sure you want to logout?</p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-4 py-2 rounded-full bg-[#303D5A] hover:bg-[#4A9EDE] text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="px-6 py-2 rounded-full bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black font-semibold shadow-md"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-
-      {/* Flash Welcome Message */}
       {showWelcomePopup && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
           <div className="bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black px-6 py-2 rounded-full shadow-lg text-sm font-medium animate-drop-fade">
