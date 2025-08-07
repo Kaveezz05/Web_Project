@@ -2,7 +2,7 @@ import React, { useState, memo } from "react";
 import { FaUser, FaLock } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
-import useAuth from "../hooks/useAuth"; // ✅ useAuth hook
+import useAuth from "../hooks/useAuth";
 
 const InputWithIcon = memo(({ icon: Icon, ...props }) => (
   <div className="relative">
@@ -28,7 +28,7 @@ const Login = () => {
   const [regUsername, setRegUsername] = useState("");
   const [regPassword, setRegPassword] = useState("");
 
-  const { user, login, logout } = useAuth(); // ✅ using the hook
+  const { user, login, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -54,14 +54,13 @@ const Login = () => {
       });
 
       const data = await res.json();
-
       if (!res.ok || !data.success) {
         alert(data.message || "Login failed");
         setLoading(false);
         return;
       }
 
-      login({ username: data.username }); // ✅ saves user in sessionStorage
+      login({ username: data.username });
       setShowLogin(false);
       setLoading(false);
       setShowWelcomePopup(true);
@@ -71,7 +70,6 @@ const Login = () => {
       if (username === "admin") navigate("/admin");
       else if (username === "cashier") navigate("/cashier");
       else navigate("/");
-
     } catch (error) {
       console.error("Login error:", error);
       alert("Network error. Make sure XAMPP is running and login.php is accessible.");
@@ -103,7 +101,6 @@ const Login = () => {
       });
 
       const data = await res.json();
-
       if (!res.ok || !data.success) {
         alert(data.message || "Registration failed");
         setLoading(false);
@@ -124,7 +121,7 @@ const Login = () => {
   };
 
   const confirmLogout = () => {
-    logout(); // ✅ clear session
+    logout();
     setShowLogoutConfirm(false);
     navigate("/");
   };
@@ -153,6 +150,7 @@ const Login = () => {
         </div>
       )}
 
+      {/* ✅ Login Modal */}
       {showLogin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm min-h-screen">
           <div className="relative w-full max-w-md bg-black/80 border border-[#303D5A] rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">
@@ -266,12 +264,21 @@ const Login = () => {
         </div>
       )}
 
+      {/* ✅ Logout Modal (now styled like login modal) */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1C1F2E]/90 border border-[#4A9EDE]/20 px-8 py-6 rounded-xl text-center shadow-xl max-w-sm w-full">
-            <h2 className="text-xl font-bold mb-4">Confirm Logout</h2>
-            <p className="text-sm text-[#A3AED0] mb-6">Are you sure you want to logout?</p>
-            <div className="flex justify-end gap-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm min-h-screen">
+          <div className="relative w-full max-w-md bg-black/80 border border-[#303D5A] rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">
+            <button
+              onClick={() => setShowLogoutConfirm(false)}
+              className="absolute top-4 right-4 text-3xl font-bold text-[#A3AED0] hover:text-[#2978B5]"
+            >
+              &times;
+            </button>
+
+            <h2 className="text-2xl font-bold mb-4 text-center">Confirm Logout</h2>
+            <p className="text-sm text-[#A3AED0] text-center mb-6">Are you sure you want to logout?</p>
+
+            <div className="flex justify-center gap-4">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
                 className="px-4 py-2 rounded-full bg-[#303D5A] hover:bg-[#4A9EDE] text-white"

@@ -150,31 +150,34 @@ const ListShows = () => {
               </tr>
             </thead>
             <tbody>
-              {shows.map((show, index) => (
-                <tr key={show.id} className="border-t border-[#2f3542]">
-                  <td className="px-4 py-4">{index + 1}</td>
-                  <td className="px-4 py-4">{show.movie_title}</td>
-                  <td className="px-4 py-4">
-                    {new Date(show.show_datetime).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-4">{formatLKR(show.show_price)}</td>
-                  <td className="px-4 py-4">{dateFormat(show.created_at)}</td>
-                  <td className="px-4 py-4 flex gap-3">
-                    <button
-                      onClick={() => openEditModal(show)}
-                      className="text-blue-400 hover:text-blue-200"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(show.id, show.movie_id)}
-                      className="text-red-400 hover:text-red-200"
-                    >
-                      <Trash size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {[...shows]
+                .filter((s) => new Date(s.show_datetime) >= new Date())
+                .sort((a, b) => new Date(a.show_datetime) - new Date(b.show_datetime))
+                .map((show, index) => (
+                  <tr key={show.id} className="border-t border-[#2f3542]">
+                    <td className="px-4 py-4">{index + 1}</td>
+                    <td className="px-4 py-4">{show.movie_title}</td>
+                    <td className="px-4 py-4">
+                      {new Date(show.show_datetime).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-4">{formatLKR(show.show_price)}</td>
+                    <td className="px-4 py-4">{dateFormat(show.created_at)}</td>
+                    <td className="px-4 py-4 flex gap-3">
+                      <button
+                        onClick={() => openEditModal(show)}
+                        className="text-blue-400 hover:text-blue-200"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(show.id, show.movie_id)}
+                        className="text-red-400 hover:text-red-200"
+                      >
+                        <Trash size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
