@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
+/* Layout */
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import ProtectedRoute from './components/ProtectedRoute'; // ✅ Add this
+import ProtectedRoute from './components/ProtectedRoute';
 
-// User pages
+/* User pages */
 import Home from './pages/Home';
 import Movies from './pages/Movies';
 import MovieDetails from './pages/MovieDetails';
@@ -14,7 +15,7 @@ import SeatLayout from './pages/SeatLayout';
 import MyBookings from './pages/MyBookings';
 import Favorites from './pages/Favorites';
 
-// Admin
+/* Admin */
 import Layout from './pages/admin/Layout';
 import Dashboard from './pages/admin/Dashboard';
 import AddShows from './pages/admin/AddShows';
@@ -22,16 +23,20 @@ import ListShows from './pages/admin/ListShows';
 import AdminCalender from './pages/admin/AdminCalender';
 import AddTrailer from './pages/admin/AddTrailer';
 
-// Cashier
+/* Cashier */
 import CashierLayout from './pages/cashier/CashierLayout';
 import CashierDashboard from './pages/cashier/CashierDashboard';
 import CashierBookings from './pages/cashier/CashierBookings';
 import CashierDate from './pages/cashier/CashierDate';
 
+
+
 const App = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isCashierRoute = location.pathname.startsWith('/cashier');
+
+  const [chatOpen, setChatOpen] = useState(false);
 
   return (
     <>
@@ -39,7 +44,7 @@ const App = () => {
       {!isAdminRoute && !isCashierRoute && <Navbar />}
 
       <Routes>
-        {/* ✅ User routes */}
+        {/* User routes */}
         <Route path="/" element={<Home />} />
         <Route path="/movies" element={<Movies />} />
         <Route path="/movies/:id" element={<MovieDetails />} />
@@ -47,11 +52,11 @@ const App = () => {
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/favorites" element={<Favorites />} />
 
-        {/* ✅ Admin protected routes */}
+        {/* Admin protected routes */}
         <Route
           path="/admin/*"
           element={
-            <ProtectedRoute allow={["admin"]}>
+            <ProtectedRoute allow={['admin']}>
               <Layout />
             </ProtectedRoute>
           }
@@ -62,13 +67,14 @@ const App = () => {
           <Route path="admin-dashboard" element={<Dashboard />} />
           <Route path="admin-calender" element={<AdminCalender />} />
           <Route path="add-trailer" element={<AddTrailer />} />
+         
         </Route>
 
-        {/* ✅ Cashier protected routes */}
+        {/* Cashier protected routes */}
         <Route
           path="/cashier/*"
           element={
-            <ProtectedRoute allow={["cashier"]}>
+            <ProtectedRoute allow={['cashier']}>
               <CashierLayout />
             </ProtectedRoute>
           }
@@ -78,6 +84,7 @@ const App = () => {
           <Route path="filter" element={<CashierDate />} />
         </Route>
       </Routes>
+
 
       {!isAdminRoute && !isCashierRoute && <Footer />}
     </>

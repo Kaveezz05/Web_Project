@@ -1,3 +1,4 @@
+// /src/pages/admin/Dashboard.jsx
 import React, { useEffect, useState } from 'react';
 import {
   ChartLineIcon,
@@ -27,11 +28,11 @@ const Dashboard = () => {
 
   useEffect(() => {
     const init = async () => {
-      const res = await fetch("http://localhost/vistalite/admin-auth.php", {
-        credentials: "include",
+      const res = await fetch('http://localhost/vistalite/admin-auth.php', {
+        credentials: 'include',
       });
       const data = await res.json();
-      if (!data.success) navigate("/login");
+      if (!data.success) navigate('/login');
       else fetchDashboardData();
     };
 
@@ -40,13 +41,17 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [showsRes, usersRes] = await Promise.all([
+      const [showsRes, usersRes, statsRes] = await Promise.all([
         fetch('http://localhost/vistalite/getactiveshows.php'),
         fetch('http://localhost/vistalite/getusercount.php'),
+        fetch('http://localhost/vistalite/getbookingstats.php', { credentials: 'include' }),
       ]);
 
-      const showsData = await showsRes.json();
-      const usersData = await usersRes.json();
+      const [showsData, usersData, statsData] = await Promise.all([
+        showsRes.json(),
+        usersRes.json(),
+        statsRes.json(),
+      ]);
 
       const now = new Date();
 
@@ -61,6 +66,8 @@ const Dashboard = () => {
         ...prev,
         activeShows: upcomingShows,
         totalUser: usersData.total_users || 0,
+        totalBookings: statsData?.total_bookings ?? 0,
+        totalRevenue: statsData?.total_revenue ?? 0,
       }));
     } catch (err) {
       console.error('Dashboard load failed:', err);
@@ -97,7 +104,6 @@ const Dashboard = () => {
   return (
     <>
       <Title text1="Admin" text2="Dashboard" />
-
       <div className="relative px-6 md:px-10 pb-10 text-[#E5E9F0] min-h-[80vh]">
         <BlurCircle top="60px" left="-60px" />
         <BlurCircle bottom="-40px" right="-60px" />

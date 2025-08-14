@@ -128,7 +128,8 @@ const Login = () => {
 
   return (
     <>
-      {!user ? (
+      {/* ✅ Only show name + logout for normal users */}
+      {!user || user.username.toLowerCase() === "admin" || user.username.toLowerCase() === "cashier" ? (
         <button
           onClick={() => setShowLogin(true)}
           className="px-5 py-2 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] transition rounded-full font-semibold text-black"
@@ -264,7 +265,7 @@ const Login = () => {
         </div>
       )}
 
-      {/* ✅ Logout Modal (now styled like login modal) */}
+      {/* ✅ Logout Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm min-h-screen">
           <div className="relative w-full max-w-md bg-black/80 border border-[#303D5A] rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">

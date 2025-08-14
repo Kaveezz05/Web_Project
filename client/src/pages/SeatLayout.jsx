@@ -114,6 +114,40 @@ const SeatLayout = () => {
     fetchBookedSeats();
   }, [selectedTime, id, selectedDate]);
 
+  // ✅ Create booking (form-encoded) then navigate to My Bookings
+  const handleProceedToCheckout = async () => {
+    if (!selectedTime || selectedSeats.length === 0) {
+      toast.error('Please select time and seats!');
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams();
+      params.append('movie_id', id);
+      params.append('date', selectedDate);
+      params.append('time', selectedTime.time);
+      selectedSeats.forEach(s => params.append('seats[]', s));
+
+      const res = await fetch('http://localhost/vistalite/createbooking.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        toast.error(data.error || 'Failed to create booking');
+        return;
+      }
+
+      toast.success('Seats reserved! Proceeding to payment…');
+      navigate('/my-bookings');
+    } catch (err) {
+      toast.error('Network error creating booking');
+    }
+  };
+
   if (loading) return <Loading />;
 
   return (
@@ -155,7 +189,10 @@ const SeatLayout = () => {
           Select your seat
         </h1>
 
-        <div className="w-64 h-2 mx-auto mb-3 rounded-full" style={{ background: 'rgba(41,120,181,0.6)', boxShadow: '0 0 10px rgba(41,120,181,0.8)' }} />
+        <div
+          className="w-64 h-2 mx-auto mb-3 rounded-full"
+          style={{ background: 'rgba(41,120,181,0.6)', boxShadow: '0 0 10px rgba(41,120,181,0.8)' }}
+        />
         <p className="text-[#A3AED0] text-sm mb-6 tracking-widest">SCREEN SIDE</p>
 
         <div className="flex flex-col items-center mt-10 text-xs">
@@ -174,13 +211,7 @@ const SeatLayout = () => {
         {/* Checkout */}
         <div className="mt-12 flex justify-center w-full">
           <button
-            onClick={() => {
-              if (!selectedTime || selectedSeats.length === 0) {
-                toast.error('Please select time and seats!');
-                return;
-              }
-              navigate('/my-bookings');
-            }}
+            onClick={handleProceedToCheckout}
             className="flex items-center gap-2 px-10 py-3 text-sm bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] transition rounded-full font-medium cursor-pointer active:scale-95 text-black"
           >
             Proceed to Checkout

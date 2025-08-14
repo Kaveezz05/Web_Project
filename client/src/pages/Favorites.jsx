@@ -5,36 +5,34 @@ import BlurCircle from '../components/BlurCircle';
 const Favorites = () => {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [allMovies, setAllMovies] = useState([]);
-
-  const username = localStorage.getItem('username') || 'guest';
 
   useEffect(() => {
-    const fetchMovies = async () => {
+    const fetchFavorites = async () => {
       try {
-        const res = await fetch("http://localhost/vistalite/getmovies.php");
-        const text = await res.text();
-        const data = JSON.parse(text);
-        if (data.success) {
-          setAllMovies(data.movies);
+        const res = await fetch("http://localhost/vistalite/getfavorites.php", {
+          credentials: "include"
+        });
+        const data = await res.json();
+        console.log("Favorites API response:", data);
+        if (data.success && Array.isArray(data.favorites)) {
+          setFavorites(data.favorites);
         } else {
-          console.error("Failed to fetch movies:", data.error);
+          setFavorites([]);
         }
       } catch (err) {
+        setFavorites([]);
         console.error("Fetch error:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMovies();
+    fetchFavorites();
   }, []);
 
   useEffect(() => {
-    const storedFavorites = JSON.parse(localStorage.getItem(`favorites_${username}`)) || [];
-    const filtered = allMovies.filter(movie => storedFavorites.includes(movie.id?.toString()));
-    setFavorites(filtered);
-  }, [allMovies, username]);
+    console.log("Favorites state:", favorites);
+  }, [favorites]);
 
   if (loading) {
     return (

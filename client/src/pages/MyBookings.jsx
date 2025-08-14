@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { dummyBookingData } from "../assets/assets";
 import Loading from "../components/Loading";
 import BlurCircle from "../components/BlurCircle";
 import timeFormat from "../lib/timeFormat";
 import { dateFormat } from "../lib/dateFormat";
 import formatLKR from "../lib/formatLKR";
 import { CheckCircle } from "lucide-react";
+
+const API_BASE = "http://localhost/vistalite";
 
 const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -23,9 +24,28 @@ const MyBookings = () => {
   const [isPaying, setIsPaying] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
+  // Fetch bookings
   useEffect(() => {
-    setBookings(dummyBookingData);
-    setIsLoading(false);
+    const fetchBookings = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/getbookings.php`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (data.success) {
+          setBookings(Array.isArray(data.bookings) ? data.bookings : []);
+        } else {
+          setBookings([]);
+          console.error(data.error);
+        }
+      } catch (err) {
+        console.error("Error fetching bookings:", err);
+        setBookings([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchBookings();
   }, []);
 
   const handleInputChange = (e) => {
@@ -39,7 +59,6 @@ const MyBookings = () => {
     } else if (name === "cvv") {
       val = val.replace(/\D/g, "").slice(0, 3);
     }
-
     setFormData((prev) => ({ ...prev, [name]: val }));
   };
 
@@ -48,26 +67,49 @@ const MyBookings = () => {
     if (!formData.fullName.trim()) newErrors.fullName = "Full Name is required.";
     if (!formData.idNumber.trim()) newErrors.idNumber = "ID Number is required.";
     if (!formData.address.trim()) newErrors.address = "Address is required.";
-    if (!/^\d{16}$/.test(formData.cardNumber.replace(/\s/g, ""))) newErrors.cardNumber = "Card number must be 16 digits.";
-    if (!/^(0[1-9]|1[0-2])\/?([0-9]{2})$/.test(formData.expiry)) newErrors.expiry = "Expiry must be in MM/YY format.";
+    if (!/^\d{16}$/.test(formData.cardNumber.replace(/\s/g, "")))
+      newErrors.cardNumber = "Card number must be 16 digits.";
+    if (!/^(0[1-9]|1[0-2])\/?([0-9]{2})$/.test(formData.expiry))
+      newErrors.expiry = "Expiry must be in MM/YY format.";
     if (!/^\d{3}$/.test(formData.cvv)) newErrors.cvv = "CVV must be 3 digits.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handlePaymentSubmit = (e) => {
+  const handlePaymentSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     setIsPaying(true);
-    setTimeout(() => {
-      setBookings((prev) => {
-        const updated = [...prev];
-        updated[payingIndex].isPaid = true;
-        return updated;
+    try {
+      const bookingId = bookings[payingIndex].id;
+      const bookingAmount = bookings[payingIndex].amount || 0;
+      const res = await fetch(`${API_BASE}/markPaid.php`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          booking_id: bookingId,
+          payment_ref: "CARD-" + Date.now(),
+          amount: bookingAmount,
+        }),
       });
+
+      const data = await res.json();
+      if (data.success) {
+        setBookings((prev) => {
+          const next = [...prev];
+          next[payingIndex].isPaid = true;
+          return next;
+        });
+        setShowSuccessPopup(true);
+      } else {
+        alert("Payment failed: " + data.error);
+      }
+    } catch (err) {
+      console.error("Payment error:", err);
+    } finally {
       setIsPaying(false);
-      setShowSuccessPopup(true);
       setPayingIndex(null);
       setErrors({});
       setFormData({
@@ -78,7 +120,7 @@ const MyBookings = () => {
         expiry: "",
         cvv: "",
       });
-    }, 2000);
+    }
   };
 
   const handleModalClick = (e) => {
@@ -107,30 +149,39 @@ const MyBookings = () => {
         My Bookings
       </h1>
 
+      {bookings.length === 0 && (
+        <p className="text-[#A3AED0]">You have no bookings yet.</p>
+      )}
+
       {bookings.map((item, index) => (
         <div
-          key={index}
-          className="flex flex-col md:flex-row justify-between bg-[#2978B5]/8 hover:bg-[#4A9EDE]/20 rounded-lg mt-4 p-2 max-w-3xl"
+          key={item.id}
+          className="group bg-[#0F1A32]/60 hover:bg-[#1C2A4B]/60 transition-colors rounded-xl border border-[#4A9EDE]/20 shadow-md p-5 mb-4 max-w-3xl"
         >
-          <div className="flex flex-col md:flex-row">
-            <img
-              src={item.show.movie.poster_path}
-              alt={item.show.movie.title}
-              className="md:max-w-45 aspect-video h-auto object-cover object-bottom rounded"
-            />
-            <div className="flex flex-col p-4">
-              <p className="text-lg font-semibold">{item.show.movie.title}</p>
-              <p className="text-gray-400 text-sm">{timeFormat(item.show.movie.runtime)}</p>
-              <p className="text-gray-400 text-sm mt-auto">{dateFormat(item.show.showDateTime)}</p>
+          {/* Top Row: Title + status + amount */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-2 px-3 py-1 text-xs rounded-full bg-[#122A57] border border-[#4A9EDE]/30 text-[#A3C5EE]">
+                {timeFormat(item.show.movie.runtime)}
+              </span>
+              {item.isPaid ? (
+                <span className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" /> Paid
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-amber-500/10 text-amber-300 border border-amber-400/30">
+                  <span className="w-2 h-2 rounded-full bg-amber-300" /> Pending
+                </span>
+              )}
             </div>
-          </div>
 
-          <div className="flex flex-col md:items-end md:text-right justify-between p-4">
             <div className="flex items-center gap-4">
-              <p className="text-2xl font-semibold mb-3">{formatLKR(item.amount)}</p>
-              {!item.isPaid ? (
+              <p className="text-2xl font-semibold tracking-tight">
+                {formatLKR(item.amount || 0)}
+              </p>
+              {!item.isPaid && (
                 <button
-                  className="bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black px-4 py-1.5 mb-3 text-sm rounded-full font-medium"
+                  className="shrink-0 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black px-4 py-1.5 text-sm rounded-full font-medium hover:opacity-90"
                   onClick={() => {
                     setPayingIndex(index);
                     setErrors({});
@@ -146,20 +197,29 @@ const MyBookings = () => {
                 >
                   Pay Now
                 </button>
-              ) : (
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#A1FFC3] to-[#4A90E2] font-semibold">
-                  Paid
-                </span>
               )}
             </div>
-            <div className="text-sm">
-              <p>
-                <span className="text-gray-400">Total Tickets: </span>
-                {item.bookedSeats.length}
+          </div>
+
+          {/* Middle: Movie + Date/Time */}
+          <div className="mt-3 grid md:grid-cols-2 gap-2">
+            <div>
+              <p className="text-lg font-semibold leading-tight">
+                {item.show.movie.title}
               </p>
-              <p>
-                <span className="text-gray-400">Seat Numbers: </span>
-                {item.bookedSeats.join(", ")}
+              <p className="text-[#A3AED0] text-sm">
+                {dateFormat(item.show.showDateTime)}
+              </p>
+            </div>
+
+            <div className="md:text-right">
+              <p className="text-sm">
+                <span className="text-[#7FA9DC]">Total Tickets:</span>{" "}
+                <span className="font-semibold">{item.bookedSeats.length}</span>
+              </p>
+              <p className="text-sm">
+                <span className="text-[#7FA9DC]">Seat Numbers:</span>{" "}
+                <span className="font-semibold">{item.bookedSeats.join(", ")}</span>
               </p>
             </div>
           </div>
@@ -175,14 +235,18 @@ const MyBookings = () => {
         >
           <form
             onSubmit={handlePaymentSubmit}
-            className="relative bg-[#2978B5]/10 backdrop-blur-md border border-[#2978B5] rounded-xl p-8 max-w-md w-full mx-4 shadow-xl text-white"
+            className="relative bg-[#0F1A32]/90 backdrop-blur-md border border-[#2978B5] rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl text-white"
             onClick={(e) => e.stopPropagation()}
             noValidate
           >
             <div className="relative z-10 space-y-5">
-              <h2 className="text-2xl font-bold mb-4 border-b border-[#4A9EDE] pb-2">
+              <h2 className="text-2xl font-bold mb-2">
                 Complete Your Payment
               </h2>
+              <p className="text-sm text-[#A3AED0]">
+                Booking: <span className="font-semibold">{bookings[payingIndex]?.show?.movie?.title}</span> ·{" "}
+                Amount: <span className="font-semibold">{formatLKR(bookings[payingIndex]?.amount || 0)}</span>
+              </p>
 
               {["fullName", "idNumber", "address", "cardNumber", "expiry", "cvv"].map((field) => (
                 <div key={field}>
@@ -202,11 +266,11 @@ const MyBookings = () => {
                 </div>
               ))}
 
-              <div className="flex justify-end gap-4">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setPayingIndex(null)}
-                  className="px-6 py-2 rounded-full bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] text-black font-semibold"
+                  className="px-6 py-2 rounded-full bg-white/10 border border-white/20 hover:bg-white/15"
                   disabled={isPaying}
                 >
                   Cancel
@@ -214,8 +278,8 @@ const MyBookings = () => {
                 <button
                   type="submit"
                   disabled={isPaying}
-                  className={`px-8 py-2 rounded-full font-semibold text-white ${
-                    isPaying ? "opacity-60 cursor-not-allowed" : "bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA]"
+                  className={`px-8 py-2 rounded-full font-semibold text-black bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] ${
+                    isPaying ? "opacity-60 cursor-not-allowed" : "hover:opacity-90"
                   }`}
                 >
                   {isPaying ? "Processing..." : "Pay"}

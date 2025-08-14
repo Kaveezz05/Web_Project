@@ -12,14 +12,17 @@ const MovieDetails = () => {
   const [dateTime, setDateTime] = useState({});
   const [selectedDate, setSelectedDate] = useState('');
   const [loading, setLoading] = useState(true);
-  const [isFavorite, setIsFavorite] = useState(false);
 
-  const username = localStorage.getItem('username') || 'guest';
+  // Favorite logic
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [checkingFavorite, setCheckingFavorite] = useState(true);
+  const [favLoading, setFavLoading] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  // Fetch movie details
   useEffect(() => {
     const fetchMovieData = async () => {
       try {
@@ -48,7 +51,6 @@ const MovieDetails = () => {
         if (data.success && data.dateTime) {
           const now = new Date();
           const filtered = {};
-
           Object.entries(data.dateTime).forEach(([dateStr, times]) => {
             const validTimes = times.filter((timeStr) => {
               const full = new Date(`${dateStr}T${timeStr}`);
@@ -58,7 +60,6 @@ const MovieDetails = () => {
               filtered[dateStr] = validTimes;
             }
           });
-
           setDateTime(filtered);
         }
       } catch (err) {
@@ -70,25 +71,56 @@ const MovieDetails = () => {
 
     fetchMovieData();
     fetchDates();
+  }, [id]);
 
-    const favs = JSON.parse(localStorage.getItem(`favorites_${username}`)) || [];
-    setIsFavorite(favs.includes(id));
-  }, [id, username]);
+  // Fetch and check favorite from backend
+  useEffect(() => {
+    const checkFavorite = async () => {
+      setCheckingFavorite(true);
+      try {
+        const res = await fetch('http://localhost/vistalite/getfavorites.php', {
+          credentials: 'include',
+        });
+        const data = await res.json();
+        if (
+          data.success &&
+          data.favorites &&
+          data.favorites.some(fav => String(fav.id) === String(id))
+        ) {
+          setIsFavorite(true);
+        } else {
+          setIsFavorite(false);
+        }
+      } catch {
+        setIsFavorite(false);
+      }
+      setCheckingFavorite(false);
+    };
+    checkFavorite();
+  }, [id]);
 
-  const handleFavorite = () => {
-    const key = `favorites_${username}`;
-    const favs = JSON.parse(localStorage.getItem(key)) || [];
-    let updated = [];
-
-    if (favs.includes(id)) {
-      updated = favs.filter(f => f !== id);
-      setIsFavorite(false);
+  // Optimistic Favorite Handler
+  const handleFavorite = async () => {
+    if (favLoading || checkingFavorite || !movie) return;
+    setFavLoading(true);
+    if (!isFavorite) {
+      setIsFavorite(true); // Optimistically set red
+      await fetch('http://localhost/vistalite/addfavorite.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `movie_id=${movie.id}`,
+      });
     } else {
-      updated = [...favs, id];
-      setIsFavorite(true);
+      setIsFavorite(false); // Optimistically remove red
+      await fetch('http://localhost/vistalite/removefavorite.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `movie_id=${movie.id}`,
+      });
     }
-
-    localStorage.setItem(key, JSON.stringify(updated));
+    setFavLoading(false);
   };
 
   const handleBookNow = () => {
@@ -157,13 +189,14 @@ const MovieDetails = () => {
 
               <button
                 onClick={handleFavorite}
+                disabled={favLoading || checkingFavorite}
                 className="p-2 rounded-full bg-black/30 border border-[#4A9EDE]/30 hover:bg-[#4A90E2]/20 transition"
+                title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
               >
-                {isFavorite ? (
-                  <Heart fill="#E94E77" className="text-[#E94E77]" />
-                ) : (
-                  <Heart className="text-white" />
-                )}
+                <Heart
+                  fill={isFavorite ? "#E94E77" : "none"}
+                  className={isFavorite ? "text-[#E94E77]" : "text-white"}
+                />
               </button>
             </div>
           </div>
