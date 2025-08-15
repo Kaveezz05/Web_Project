@@ -138,7 +138,7 @@ const CashierDate = () => {
   const exportPDF = () => {
     if (!rows.length) return;
 
-    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const doc = new jsPDF({ unit: "pt", format: "a3" });
 
     // Header (spaced so it never overlaps)
     doc.setFont("helvetica", "bold");
@@ -180,10 +180,10 @@ const CashierDate = () => {
       headStyles: { fillColor: [41, 120, 181], textColor: 255 },
       // sensible widths; Seats column flexes to fill remaining space
       columnStyles: {
-        0: { cellWidth: 28 },
-        1: { cellWidth: 60 },
+        0: { cellWidth: 32 },
+        1: { cellWidth: 170},
         2: { cellWidth: 110 },
-        3: { cellWidth: 50},
+        3: { cellWidth: 70},
         4: { cellWidth: 90 },
         6: { cellWidth: 45 },
       },

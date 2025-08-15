@@ -1,65 +1,47 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
-import { MenuIcon, XIcon, LogOut } from "lucide-react";
+import { Menu as MenuIcon, X as XIcon, LogOut, Shield, BadgeDollarSign } from "lucide-react";
 import Login from "./Login";
+import useAuth from "../hooks/useAuth";
 
 const API_BASE = "http://localhost/vistalite";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isAuthed, setIsAuthed] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Check login status
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/auth.php`, {
-          credentials: "include",
-        });
-        const data = await res.json();
-        if (data?.success && data?.user) {
-          setIsAuthed(true);
-          setUser(data.user);
-        } else {
-          setIsAuthed(false);
-          setUser(null);
-        }
-      } catch {
-        setIsAuthed(false);
-        setUser(null);
-      }
-    };
-    checkAuth();
-  }, []);
+  const location = useLocation();
+  const onAdminDash = location.pathname.startsWith("/admin");
+  const onCashierDash = location.pathname.startsWith("/cashier");
 
-  // Logout function
+  // 🔒 Keep navbar hidden on admin/cashier dashboards only
+  if (onAdminDash || onCashierDash) return null;
+
+  const closeMenuAndTop = () => {
+    window.scrollTo(0, 0);
+    setIsOpen(false);
+  };
+
+  const isAdmin = user?.username?.toLowerCase() === "admin";
+  const isCashier = user?.username?.toLowerCase() === "cashier";
+  const isAuthed = !!user;
+
   const handleLogout = async () => {
     try {
-      const res = await fetch(`${API_BASE}/logout.php`, {
-        method: "POST",
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (data.success) {
-        localStorage.clear();
-        sessionStorage.clear();
-        setIsAuthed(false);
-        setUser(null);
-        navigate("/login");
-      } else {
-        console.error("Logout failed:", data.error);
-      }
-    } catch (err) {
-      console.error("Logout error:", err);
+      await fetch(`${API_BASE}/logout.php`, { method: "POST", credentials: "include" });
+    } catch (_) {
+      // ignore network hiccups; still clear client state
+    } finally {
+      logout();
+      navigate("/"); // back to home
     }
   };
 
   return (
     <div className="fixed top-0 left-0 z-50 w-full flex items-center justify-between px-6 md:px-16 lg:px-36 py-5 bg-black/70 backdrop-blur-sm">
-      <Link to="/" className="max-md:flex-1">
+      <Link to="/" className="max-md:flex-1" onClick={closeMenuAndTop}>
         <img src={assets.logo} alt="Site Logo" className="w-46 h-auto" />
       </Link>
 
@@ -72,72 +54,46 @@ const Navbar = () => {
       >
         <XIcon
           className="md:hidden absolute top-6 right-6 w-6 h-6 cursor-pointer text-gray-300 hover:text-[#191970]"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => setIsOpen(false)}
         />
 
-        <Link
-          to="/"
-          onClick={() => {
-            window.scrollTo(0, 0);
-            setIsOpen(false);
-          }}
-          className="text-white hover:text-[#4682B4] transition"
-        >
+        <Link to="/" onClick={closeMenuAndTop} className="text-white hover:text-[#4682B4] transition">
           Home
         </Link>
-        <Link
-          to="/movies"
-          onClick={() => {
-            window.scrollTo(0, 0);
-            setIsOpen(false);
-          }}
-          className="text-white hover:text-[#4682B4] transition"
-        >
+
+        <Link to="/movies" onClick={closeMenuAndTop} className="text-white hover:text-[#4682B4] transition">
           Movies
         </Link>
-        <Link
-          to="/"
-          onClick={() => {
-            window.scrollTo(0, 0);
-            setIsOpen(false);
-          }}
-          className="text-white hover:text-[#4682B4] transition"
-        >
+
+        <Link to="/" onClick={closeMenuAndTop} className="text-white hover:text-[#4682B4] transition">
           Theaters
         </Link>
-        <Link
-          to="/favorites"
-          onClick={() => {
-            window.scrollTo(0, 0);
-            setIsOpen(false);
-          }}
-          className="text-white hover:text-[#4682B4] transition"
-        >
-          Favorites
-        </Link>
-        <Link
-          to="/my-bookings"
-          onClick={() => {
-            window.scrollTo(0, 0);
-            setIsOpen(false);
-          }}
-          className="text-white hover:text-[#4682B4] transition"
-        >
-          Bookings
-        </Link>
+
+        {/* Only normal signed-in users see Favorites/Bookings in navbar */}
+        {isAuthed && !isAdmin && !isCashier && (
+          <>
+            <Link to="/favorites" onClick={closeMenuAndTop} className="text-white hover:text-[#4682B4] transition">
+              Favorites
+            </Link>
+            <Link to="/my-bookings" onClick={closeMenuAndTop} className="text-white hover:text-[#4682B4] transition">
+              Bookings
+            </Link>
+          </>
+        )}
       </div>
 
-      <div className="flex items-center gap-8">
-  <button className="px-4 py-1 sm:px-7 sm:py-2 bg-[#9CA3AF]/30 hover:bg-[#4682B4] transition rounded-full font-medium text-white cursor-pointer">
-    <Login />
-  </button>
-</div>
+      <div className="flex items-center gap-3">
+        {/* ✅ If admin/cashier, DON'T use <Login/> (it always shows 'Login' for those names) */}
+        {(
+          // Guests and normal users use the existing Login widget
+          <Login />
+        )}
 
-
-      <MenuIcon
-        className="max-md:ml-4 md:hidden w-8 h-8 cursor-pointer text-gray-300 hover:text-[#191970] transition"
-        onClick={() => setIsOpen(!isOpen)}
-      />
+        <MenuIcon
+          className="max-md:ml-2 md:hidden w-8 h-8 cursor-pointer text-gray-300 hover:text-[#191970] transition"
+          onClick={() => setIsOpen(true)}
+        />
+      </div>
     </div>
   );
 };

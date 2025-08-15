@@ -79,7 +79,7 @@ const CashierBookings = () => {
 
     // Title
     doc.setFontSize(16);
-    doc.text("Cashier – Bookings", 40, 40);
+    doc.text("Total Bookings", 40, 40);
 
     // Table
     autoTable(doc, {

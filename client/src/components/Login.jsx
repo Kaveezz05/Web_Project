@@ -152,118 +152,120 @@ const Login = () => {
       )}
 
       {/* ✅ Login Modal */}
-      {showLogin && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm min-h-screen">
-          <div className="relative w-full max-w-md bg-black/80 border border-[#303D5A] rounded-2xl shadow-xl p-8 text-[#E5E9F0] m-4">
+{showLogin && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md min-h-screen">
+    <div className="relative w-full max-w-md bg-black/70 border border-[#303D5A] rounded-2xl shadow-2xl p-8 text-[#E5E9F0] m-4">
+      <button
+        onClick={() => setShowLogin(false)}
+        className="absolute top-4 right-4 text-3xl font-bold text-[#A3AED0] hover:text-[#2978B5] transition-colors"
+      >
+        &times;
+      </button>
+
+      {/* Centered Vistalite Title */}
+      <h1 className="text-5xl font-extrabold mb-12 text-center tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] drop-shadow-lg">
+        Vistalite
+      </h1>
+
+      <form
+        onSubmit={action === "login" ? handleLogin : handleRegister}
+        className="space-y-6"
+      >
+        {action === "login" ? (
+          <>
+            <InputWithIcon
+              icon={FaUser}
+              type="text"
+              placeholder="Username"
+              value={loginUsername}
+              onChange={(e) => setLoginUsername(e.target.value)}
+              required
+              autoFocus
+              disabled={loading}
+            />
+            <InputWithIcon
+              icon={FaLock}
+              type="password"
+              placeholder="Password"
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              required
+              disabled={loading}
+            />
             <button
-              onClick={() => setShowLogin(false)}
-              className="absolute top-4 right-4 text-3xl font-bold text-[#A3AED0] hover:text-[#2978B5]"
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] rounded-full font-semibold text-black shadow-md hover:shadow-lg transition"
             >
-              &times;
+              {loading ? "Signing In..." : "Sign In"}
             </button>
-
-            <h1 className="text-5xl font-extrabold mb-8 tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA]">
-              Vistalite
-            </h1>
-
-            <form
-              onSubmit={action === "login" ? handleLogin : handleRegister}
-              className="space-y-6"
+            <p className="text-center text-sm mt-4 text-[#A3AED0]">
+              Don’t have an account?{" "}
+              <button
+                type="button"
+                onClick={() => setAction("register")}
+                className="text-[#2978B5] underline hover:text-[#4A9EDE]"
+                disabled={loading}
+              >
+                Sign Up
+              </button>
+            </p>
+          </>
+        ) : (
+          <>
+            <InputWithIcon
+              icon={MdEmail}
+              type="email"
+              placeholder="Email"
+              value={regEmail}
+              onChange={(e) => setRegEmail(e.target.value)}
+              required
+              autoFocus
+              disabled={loading}
+            />
+            <InputWithIcon
+              icon={FaUser}
+              type="text"
+              placeholder="Username"
+              value={regUsername}
+              onChange={(e) => setRegUsername(e.target.value)}
+              required
+              disabled={loading}
+            />
+            <InputWithIcon
+              icon={FaLock}
+              type="password"
+              placeholder="Password"
+              value={regPassword}
+              onChange={(e) => setRegPassword(e.target.value)}
+              required
+              disabled={loading}
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] rounded-full font-semibold text-black shadow-md hover:shadow-lg transition"
             >
-              {action === "login" ? (
-                <>
-                  <InputWithIcon
-                    icon={FaUser}
-                    type="text"
-                    placeholder="Username"
-                    value={loginUsername}
-                    onChange={(e) => setLoginUsername(e.target.value)}
-                    required
-                    autoFocus
-                    disabled={loading}
-                  />
-                  <InputWithIcon
-                    icon={FaLock}
-                    type="password"
-                    placeholder="Password"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] rounded-full font-semibold text-black"
-                  >
-                    {loading ? "Signing In..." : "Sign In"}
-                  </button>
-                  <p className="text-center text-sm mt-4 text-[#A3AED0]">
-                    Don’t have an account?{" "}
-                    <button
-                      type="button"
-                      onClick={() => setAction("register")}
-                      className="text-[#2978B5] underline hover:text-[#4A9EDE]"
-                      disabled={loading}
-                    >
-                      Sign Up
-                    </button>
-                  </p>
-                </>
-              ) : (
-                <>
-                  <InputWithIcon
-                    icon={MdEmail}
-                    type="email"
-                    placeholder="Email"
-                    value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
-                    required
-                    autoFocus
-                    disabled={loading}
-                  />
-                  <InputWithIcon
-                    icon={FaUser}
-                    type="text"
-                    placeholder="Username"
-                    value={regUsername}
-                    onChange={(e) => setRegUsername(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                  <InputWithIcon
-                    icon={FaLock}
-                    type="password"
-                    placeholder="Password"
-                    value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] rounded-full font-semibold text-black"
-                  >
-                    {loading ? "Signing Up..." : "Sign Up"}
-                  </button>
-                  <p className="text-center text-sm mt-4 text-[#A3AED0]">
-                    Already have an account?{" "}
-                    <button
-                      type="button"
-                      onClick={() => setAction("login")}
-                      className="text-[#2978B5] underline hover:text-[#4A9EDE]"
-                      disabled={loading}
-                    >
-                      Sign In
-                    </button>
-                  </p>
-                </>
-              )}
-            </form>
-          </div>
-        </div>
-      )}
+              {loading ? "Signing Up..." : "Sign Up"}
+            </button>
+            <p className="text-center text-sm mt-4 text-[#A3AED0]">
+              Already have an account?{" "}
+              <button
+                type="button"
+                onClick={() => setAction("login")}
+                className="text-[#2978B5] underline hover:text-[#4A9EDE]"
+                disabled={loading}
+              >
+                Sign In
+              </button>
+            </p>
+          </>
+        )}
+      </form>
+    </div>
+  </div>
+)}
+
 
       {/* ✅ Logout Modal */}
       {showLogoutConfirm && (
