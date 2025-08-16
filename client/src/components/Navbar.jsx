@@ -83,7 +83,7 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center gap-3">
-        {/* ✅ If admin/cashier, DON'T use <Login/> (it always shows 'Login' for those names) */}
+        
         {(
           // Guests and normal users use the existing Login widget
           <Login />

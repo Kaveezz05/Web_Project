@@ -1,16 +1,22 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import useAuth from "../hooks/useAuth"; // ✅ Import the custom hook
 
 const ProtectedRoute = ({ children, allow }) => {
   const { user } = useAuth();
 
-  // 🚫 Not logged in → redirect to home/login
-  if (!user) return <Navigate to="/" replace />;
+  // 🚫 Not logged in → show toast + redirect
+  if (!user) {
+    toast.error("Please log in first");
+    return <Navigate to="/" replace />;
+  }
+  
 
-  // 🔒 Logged in but not allowed (e.g. not admin/cashier)
-  const username = user.username.toLowerCase();
+  // 🔒 Logged in but not allowed (role check)
+  const username = user.username?.toLowerCase();
   if (allow && !allow.includes(username)) {
+    toast.error("Access denied");
     return <Navigate to="/" replace />;
   }
 

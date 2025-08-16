@@ -4,6 +4,8 @@ import { MdEmail } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 
+const API_BASE = "http://localhost/vistalite";
+
 const InputWithIcon = memo(({ icon: Icon, ...props }) => (
   <div className="relative">
     <input
@@ -46,7 +48,7 @@ const Login = () => {
       formData.append("username", loginUsername.trim());
       formData.append("password", loginPassword.trim());
 
-      const res = await fetch("http://localhost/vistalite/login.php", {
+      const res = await fetch(`${API_BASE}/login.php`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -93,7 +95,7 @@ const Login = () => {
       formData.append("username", regUsername.trim());
       formData.append("password", regPassword.trim());
 
-      const res = await fetch("http://localhost/vistalite/register.php", {
+      const res = await fetch(`${API_BASE}/register.php`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -120,10 +122,34 @@ const Login = () => {
     }
   };
 
-  const confirmLogout = () => {
-    logout();
-    setShowLogoutConfirm(false);
-    navigate("/");
+  // ⬇️ UPDATED: server logout + hard refresh for admin/cashier
+  const confirmLogout = async () => {
+    try {
+      const role = user?.username?.toLowerCase();
+
+      // tell PHP to destroy the session (use POST if your logout.php expects it)
+      await fetch(`${API_BASE}/logout.php`, {
+        method: "POST",
+        credentials: "include",
+      }).catch(() => {});
+
+      // clear SPA auth
+      logout();
+      setShowLogoutConfirm(false);
+
+      if (role === "admin" || role === "cashier") {
+        // force full reload to clear any role-specific shell/layout state
+        window.location.href = "/";
+      } else {
+        // normal users can use a client-side navigate
+        navigate("/");
+      }
+    } catch (e) {
+      console.error("Logout error:", e);
+      // fallback: still clear SPA and hard reload
+      logout();
+      window.location.href = "/";
+    }
   };
 
   return (
@@ -152,120 +178,116 @@ const Login = () => {
       )}
 
       {/* ✅ Login Modal */}
-{showLogin && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md min-h-screen">
-    <div className="relative w-full max-w-md bg-black/70 border border-[#303D5A] rounded-2xl shadow-2xl p-8 text-[#E5E9F0] m-4">
-      <button
-        onClick={() => setShowLogin(false)}
-        className="absolute top-4 right-4 text-3xl font-bold text-[#A3AED0] hover:text-[#2978B5] transition-colors"
-      >
-        &times;
-      </button>
-
-      {/* Centered Vistalite Title */}
-      <h1 className="text-5xl font-extrabold mb-12 text-center tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] drop-shadow-lg">
-        Vistalite
-      </h1>
-
-      <form
-        onSubmit={action === "login" ? handleLogin : handleRegister}
-        className="space-y-6"
-      >
-        {action === "login" ? (
-          <>
-            <InputWithIcon
-              icon={FaUser}
-              type="text"
-              placeholder="Username"
-              value={loginUsername}
-              onChange={(e) => setLoginUsername(e.target.value)}
-              required
-              autoFocus
-              disabled={loading}
-            />
-            <InputWithIcon
-              icon={FaLock}
-              type="password"
-              placeholder="Password"
-              value={loginPassword}
-              onChange={(e) => setLoginPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
+      {showLogin && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md min-h-screen">
+          <div className="relative w-full max-w-md bg-black/70 border border-[#303D5A] rounded-2xl shadow-2xl p-8 text-[#E5E9F0] m-4">
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] rounded-full font-semibold text-black shadow-md hover:shadow-lg transition"
+              onClick={() => setShowLogin(false)}
+              className="absolute top-4 right-4 text-3xl font-bold text-[#A3AED0] hover:text-[#2978B5] transition-colors"
             >
-              {loading ? "Signing In..." : "Sign In"}
+              &times;
             </button>
-            <p className="text-center text-sm mt-4 text-[#A3AED0]">
-              Don’t have an account?{" "}
-              <button
-                type="button"
-                onClick={() => setAction("register")}
-                className="text-[#2978B5] underline hover:text-[#4A9EDE]"
-                disabled={loading}
-              >
-                Sign Up
-              </button>
-            </p>
-          </>
-        ) : (
-          <>
-            <InputWithIcon
-              icon={MdEmail}
-              type="email"
-              placeholder="Email"
-              value={regEmail}
-              onChange={(e) => setRegEmail(e.target.value)}
-              required
-              autoFocus
-              disabled={loading}
-            />
-            <InputWithIcon
-              icon={FaUser}
-              type="text"
-              placeholder="Username"
-              value={regUsername}
-              onChange={(e) => setRegUsername(e.target.value)}
-              required
-              disabled={loading}
-            />
-            <InputWithIcon
-              icon={FaLock}
-              type="password"
-              placeholder="Password"
-              value={regPassword}
-              onChange={(e) => setRegPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] rounded-full font-semibold text-black shadow-md hover:shadow-lg transition"
-            >
-              {loading ? "Signing Up..." : "Sign Up"}
-            </button>
-            <p className="text-center text-sm mt-4 text-[#A3AED0]">
-              Already have an account?{" "}
-              <button
-                type="button"
-                onClick={() => setAction("login")}
-                className="text-[#2978B5] underline hover:text-[#4A9EDE]"
-                disabled={loading}
-              >
-                Sign In
-              </button>
-            </p>
-          </>
-        )}
-      </form>
-    </div>
-  </div>
-)}
 
+            {/* Centered Vistalite Title */}
+            <h1 className="text-5xl font-extrabold mb-12 text-center tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] drop-shadow-lg">
+              Vistalite
+            </h1>
+
+            <form onSubmit={action === "login" ? handleLogin : handleRegister} className="space-y-6">
+              {action === "login" ? (
+                <>
+                  <InputWithIcon
+                    icon={FaUser}
+                    type="text"
+                    placeholder="Username"
+                    value={loginUsername}
+                    onChange={(e) => setLoginUsername(e.target.value)}
+                    required
+                    autoFocus
+                    disabled={loading}
+                  />
+                  <InputWithIcon
+                    icon={FaLock}
+                    type="password"
+                    placeholder="Password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] rounded-full font-semibold text-black shadow-md hover:shadow-lg transition"
+                  >
+                    {loading ? "Signing In..." : "Sign In"}
+                  </button>
+                  <p className="text-center text-sm mt-4 text-[#A3AED0]">
+                    Don’t have an account?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setAction("register")}
+                      className="text-[#2978B5] underline hover:text-[#4A9EDE]"
+                      disabled={loading}
+                    >
+                      Sign Up
+                    </button>
+                  </p>
+                </>
+              ) : (
+                <>
+                  <InputWithIcon
+                    icon={MdEmail}
+                    type="email"
+                    placeholder="Email"
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    required
+                    autoFocus
+                    disabled={loading}
+                  />
+                  <InputWithIcon
+                    icon={FaUser}
+                    type="text"
+                    placeholder="Username"
+                    value={regUsername}
+                    onChange={(e) => setRegUsername(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                  <InputWithIcon
+                    icon={FaLock}
+                    type="password"
+                    placeholder="Password"
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 bg-gradient-to-r from-[#4A90E2] to-[#E3E4FA] rounded-full font-semibold text-black shadow-md hover:shadow-lg transition"
+                  >
+                    {loading ? "Signing Up..." : "Sign Up"}
+                  </button>
+                  <p className="text-center text-sm mt-4 text-[#A3AED0]">
+                    Already have an account?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setAction("login")}
+                      className="text-[#2978B5] underline hover:text-[#4A9EDE]"
+                      disabled={loading}
+                    >
+                      Sign In
+                    </button>
+                  </p>
+                </>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ✅ Logout Modal */}
       {showLogoutConfirm && (

@@ -1,38 +1,59 @@
-import React, { useEffect, useState } from 'react';
-import MovieCard from '../components/MovieCard';
-import BlurCircle from '../components/BlurCircle';
+// /src/pages/Favorites.jsx
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import MovieCard from "../components/MovieCard";
+import BlurCircle from "../components/BlurCircle";
+
+const API_BASE = "http://localhost/vistalite";
 
 const Favorites = () => {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchFavorites = async () => {
+    const ctrl = new AbortController();
+
+    const run = async () => {
       try {
-        const res = await fetch("http://localhost/vistalite/getfavorites.php", {
-          credentials: "include"
+        // 1) Auth check – block guests
+        const authRes = await fetch(`${API_BASE}/auth.php`, {
+          credentials: "include",
+          signal: ctrl.signal,
+        });
+        const authData = await authRes.json();
+        if (!authData?.success || !authData?.user) {
+          // Not logged in → send to login
+          navigate("/login", { replace: true, state: { from: "/favorites" } });
+          return;
+        }
+
+        // 2) Fetch favorites
+        const res = await fetch(`${API_BASE}/getfavorites.php`, {
+          credentials: "include",
+          signal: ctrl.signal,
         });
         const data = await res.json();
-        console.log("Favorites API response:", data);
-        if (data.success && Array.isArray(data.favorites)) {
+
+        if (data?.success && Array.isArray(data.favorites)) {
           setFavorites(data.favorites);
         } else {
           setFavorites([]);
+          console.error("Favorites API error:", data?.error, data?.details);
         }
       } catch (err) {
-        setFavorites([]);
-        console.error("Fetch error:", err);
+        if (err.name !== "AbortError") {
+          console.error("Fetch error:", err);
+          setFavorites([]);
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFavorites();
-  }, []);
-
-  useEffect(() => {
-    console.log("Favorites state:", favorites);
-  }, [favorites]);
+    run();
+    return () => ctrl.abort();
+  }, [navigate]);
 
   if (loading) {
     return (
@@ -53,7 +74,7 @@ const Favorites = () => {
 
       <div className="flex flex-wrap max-sm:justify-center gap-8">
         {favorites.map((movie) => (
-          <MovieCard key={movie.id} movie={movie} />
+          <MovieCard key={movie.id ?? movie.movie_id} movie={movie} />
         ))}
       </div>
     </div>
